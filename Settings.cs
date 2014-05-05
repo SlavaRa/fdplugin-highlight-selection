@@ -11,10 +11,10 @@ namespace HighlightSelection
 	[Serializable]
 	public class Settings
 	{
-		public Color highlightColor		= Color.Red;
-		public Boolean wholeWords		= true;
-		public Boolean matchCase		= true;
-		public Boolean addLineMarker	= true;
+		public Color highlightColor = Color.Red;
+		public Boolean wholeWords = true;
+		public Boolean matchCase = true;
+		public Boolean addLineMarker = true;
 
 		[DisplayName("Highlight Color")]
 		[Description("The color to highlight the selected text.")]
