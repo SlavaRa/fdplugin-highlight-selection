@@ -21,3 +21,10 @@ D:\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
 D:\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
 D:\c#\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
 D:\c#\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
+D:\projects\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+D:\projects\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
+D:\projects\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll.CodeAnalysisLog.xml
+D:\projects\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll.lastcodeanalysissucceeded
+D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.csprojResolveAssemblyReference.cache
+D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.dll
+D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.pdb

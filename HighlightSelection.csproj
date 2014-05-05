@@ -70,7 +70,7 @@
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FlashDevelop-fork-work\PluginCore\PluginCore.csproj">
+    <ProjectReference Include="..\flashdevelop-fork\PluginCore\PluginCore.csproj">
       <Project>{61885F70-B4DC-4B44-852D-5D6D03F2A734}</Project>
       <Name>PluginCore</Name>
       <Private>False</Private>

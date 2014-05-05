@@ -105,6 +105,8 @@ namespace HighlightSelection
 		/// </summary>
 		public void Dispose()
 		{
+            timer.Dispose();
+            timer = null;
 		    SaveSettings();
 		}
 
