@@ -37,7 +37,7 @@ namespace HighlightSelection
         public bool AddLineMarker {get; set;}
 
         [Category("General")]
-        [DisplayName("Highlight references to symbol under cursor.")]
+        [DisplayName("Highlight references to symbol under cursor")]
         [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]
         public Boolean HighlightUnderCursor { get; set; }
 
