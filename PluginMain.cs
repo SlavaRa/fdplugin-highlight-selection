@@ -24,6 +24,7 @@ namespace HighlightSelection
 		private Settings settingObject;
         private Timer timer;
         private int prevPos;
+        private string prevToken;
 
 		#region Required Properties
 
@@ -96,6 +97,7 @@ namespace HighlightSelection
 	        InitBasics();
 			LoadSettings();
 			AddEventHandlers();
+            InitTimer();
 		}
 
 		/// <summary>
@@ -123,7 +125,8 @@ namespace HighlightSelection
 					}
 				    break;
 				case EventType.FileSave:
-					RemoveHighlights(doc.SciControl);
+                    if (!settingObject.HighlightUnderCursor) RemoveHighlights(doc.SciControl);
+                    else UpdateHighlightUnderCursor(doc.SciControl);
 				    break;
 			}
 		}
@@ -140,10 +143,6 @@ namespace HighlightSelection
 			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
-            prevPos = -1;
-            timer = new Timer();
-            timer.Interval = 400;
-            timer.Tick += onTimerTick;
 		}
 
 		/// <summary>
@@ -166,6 +165,7 @@ namespace HighlightSelection
                 settingObject.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
                 settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
                 settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
+                settingObject.HighlightUnderCursor = HighlightSelection.Settings.HIGHLIGHT_UNDER_CURSOR;
                 SaveSettings();
             }
             else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
@@ -180,12 +180,25 @@ namespace HighlightSelection
 		}
 
         /// <summary>
+        /// 
+        /// </summary>
+        private void InitTimer()
+        {
+            prevPos = -1;
+            timer = new Timer();
+            timer.Interval = 400;
+            timer.Tick += onTimerTick;
+            if (settingObject.HighlightUnderCursor) timer.Start();
+        }
+
+        /// <summary>
         /// DoubleClick handler
         /// </summary>
         private void onSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
-            AddHighlights(sender, GetResults(sender, sender.SelText.Trim()));
+            prevToken = sender.SelText.Trim();
+            AddHighlights(sender, GetResults(sender, prevToken));
         }
 
         /// <summary>
@@ -224,7 +237,7 @@ namespace HighlightSelection
                 }
             }
             prevPos = sci.CurrentPos;
-            timer.Start();
+            if (!settingObject.HighlightUnderCursor) timer.Start();
         }
 
         /// <summary>
@@ -239,7 +252,8 @@ namespace HighlightSelection
             sci.StartStyling(es, mask - 1);
             if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
             prevPos = -1;
-            timer.Stop();
+            prevToken = string.Empty;
+            if (!settingObject.HighlightUnderCursor) timer.Stop();
         }
 
         /// <summary>
@@ -258,7 +272,19 @@ namespace HighlightSelection
         private void onTimerTick(object sender, EventArgs e)
         {
             ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
-            if (Sci != null && Sci.CurrentPos != prevPos) RemoveHighlights(Sci);
+            if (Sci == null) return;
+            if (settingObject.HighlightUnderCursor) UpdateHighlightUnderCursor(Sci);
+            else if (Sci.CurrentPos != prevPos) RemoveHighlights(Sci);
+        }
+
+        private void UpdateHighlightUnderCursor(ScintillaControl Sci)
+        {
+            string newToken = Sci.GetWordFromPosition(Sci.CurrentPos);
+            if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
+            if (newToken == prevToken) return;
+            RemoveHighlights(Sci);
+            prevToken = newToken;
+            if (!string.IsNullOrEmpty(prevToken)) AddHighlights(Sci, GetResults(Sci, prevToken));
         }
 
 		#endregion

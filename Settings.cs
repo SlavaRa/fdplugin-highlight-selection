@@ -10,6 +10,7 @@ namespace HighlightSelection
         public const bool DEFAULT_WHOLE_WORD = true;
         public const bool DEFAULT_MATCH_CASE = true;
         public const bool DEFAULT_ADD_LINE_MARKER = true;
+        public const bool HIGHLIGHT_UNDER_CURSOR = true;
 
         [DisplayName("Highlight Color")]
 		[Description("The color to highlight the selected text.")]
@@ -30,5 +31,11 @@ namespace HighlightSelection
 		[Description("Adds a line marker next to every highlight.")]
         [DefaultValue(DEFAULT_ADD_LINE_MARKER)]
         public bool AddLineMarker {get; set;}
+
+        [Category("General")]
+        [DisplayName("Highlight references to symbol under cursor")]
+        [DefaultValue(HIGHLIGHT_UNDER_CURSOR)]
+        public Boolean HighlightUnderCursor { get; set; }
+
 	}
 }
