@@ -9,6 +9,7 @@ using PluginCore;
 using PluginCore.FRService;
 using System.Collections.Generic;
 using ScintillaNet;
+using System.Windows.Forms;
 
 namespace HighlightSelection
 {
@@ -21,6 +22,8 @@ namespace HighlightSelection
 		private string pluginAuth = "mike.cann@gmail.com";
 		private string settingFilename;
 		private Settings settingObject;
+        private Timer timer;
+        private int prevPos;
 
 		#region Required Properties
 
@@ -153,6 +156,8 @@ namespace HighlightSelection
 			sci.SetStyling(sci.TextLength, 0);
 			sci.StartStyling(es, mask - 1);
 			if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
+            prevPos = -1;
+            timer.Stop();
 		}
 
 		/// <summary>
@@ -195,6 +200,8 @@ namespace HighlightSelection
 					sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.HighlightColor));
 				}
 			}
+            prevPos = sci.CurrentPos;
+            timer.Start();
 		}
 
 		/// <summary>
@@ -217,6 +224,10 @@ namespace HighlightSelection
 			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
+            prevPos = -1;
+            timer = new Timer();
+            timer.Interval = 400;
+            timer.Tick += onTimerTick;
 		}
 
 		/// <summary>
@@ -251,6 +262,12 @@ namespace HighlightSelection
 		{
 			ObjectSerializer.Serialize(settingFilename, settingObject);
 		}
+
+        private void onTimerTick(object sender, EventArgs e)
+        {
+            ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            if (Sci != null && Sci.CurrentPos != prevPos) RemoveHighlights(Sci);
+        }
 
 		#endregion
     }
