@@ -113,11 +113,10 @@ namespace HighlightSelection
 			{
 				// Catches FileSwitch event and displays the filename it in the PluginUI.
 				case EventType.FileSwitch:
-					Console.WriteLine(doc.IsEditable);
 					if (doc.IsEditable)
 					{
-						doc.SciControl.DoubleClick += SciControl_DoubleClick;
-						doc.SciControl.Modified += SciControl_Modified;
+                        doc.SciControl.DoubleClick += onSciDoubleClick;
+						doc.SciControl.Modified += onSciModified;
 					}
 				    break;
 				case EventType.FileSave:
@@ -126,10 +125,10 @@ namespace HighlightSelection
 			}
 		}
 
-		/// <summary>
+        /// <summary>
 		/// DoubleClick handler
 		/// </summary>
-		public void SciControl_DoubleClick(ScintillaNet.ScintillaControl sender)
+		public void onSciDoubleClick(ScintillaControl sender)
 		{
 			RemoveHighlights(sender);
 			AddHighlights(sender, GetResults(sender, sender.SelText.Trim()));
@@ -138,7 +137,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Modified Handler
 		/// </summary>
-		public void SciControl_Modified(ScintillaNet.ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+		public void onSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
 		{
 			RemoveHighlights(sender);
 		}
@@ -174,7 +173,7 @@ namespace HighlightSelection
 		/// </summary>
 		private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
 		{
-			if (matches == null) return;
+            if (matches == null) return;
 			foreach (SearchMatch match in matches)
 			{
 				int start = sci.MBSafePosition(match.Index);
@@ -234,8 +233,15 @@ namespace HighlightSelection
 		public void LoadSettings()
 		{
 			settingObject = new Settings();
-			if (!File.Exists(settingFilename)) SaveSettings();
-			else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
+            if (!File.Exists(settingFilename))
+            {
+                settingObject.HighlightColor = System.Drawing.Color.Red;
+                settingObject.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
+                settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
+                settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
+                SaveSettings();
+            }
+            else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
 		}
 
 		/// <summary>
