@@ -10,7 +10,7 @@ namespace HighlightSelection
         public const bool DEFAULT_WHOLE_WORD = true;
         public const bool DEFAULT_MATCH_CASE = true;
         public const bool DEFAULT_ADD_LINE_MARKER = true;
-        public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = true;
+        public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = false;
 
         [Category("General")]
         [DisplayName("Highlight Color")]
