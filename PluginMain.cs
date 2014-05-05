@@ -166,6 +166,7 @@ namespace HighlightSelection
                 settingObject.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
                 settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
                 settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
+                settingObject.HighlightUnderCursor = HighlightSelection.Settings.HIGHLIGHT_UNDER_CURSOR;
                 SaveSettings();
             }
             else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
