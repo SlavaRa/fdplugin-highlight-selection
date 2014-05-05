@@ -97,7 +97,6 @@ namespace HighlightSelection
 			AddEventHandlers();
 		}
 
-
 		/// <summary>
 		/// Disposes the plugin
 		/// </summary>
@@ -105,7 +104,6 @@ namespace HighlightSelection
 		{
 		    SaveSettings();
 		}
-
 
 		/// <summary>
 		/// Handles the incoming events
