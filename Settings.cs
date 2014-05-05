@@ -10,7 +10,7 @@ namespace HighlightSelection
         public const bool DEFAULT_WHOLE_WORD = true;
         public const bool DEFAULT_MATCH_CASE = true;
         public const bool DEFAULT_ADD_LINE_MARKER = true;
-        public const bool HIGHLIGHT_UNDER_CURSOR = true;
+        public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = true;
 
         [Category("General")]
         [DisplayName("Highlight Color")]
@@ -38,7 +38,7 @@ namespace HighlightSelection
 
         [Category("General")]
         [DisplayName("Highlight references to symbol under cursor")]
-        [DefaultValue(HIGHLIGHT_UNDER_CURSOR)]
+        [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]
         public Boolean HighlightUnderCursor { get; set; }
 
 	}
