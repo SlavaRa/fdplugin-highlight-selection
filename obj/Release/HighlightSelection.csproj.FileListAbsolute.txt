@@ -1,0 +1,14 @@
+C:\Documents and Settings\Mike\Desktop\personal\FD3\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+C:\Documents and Settings\Mike\Desktop\personal\FD3\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
+C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\HighlightSelection\obj\Release\ResolveAssemblyReference.cache
+C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.Resources.en_US.resources
+C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.csproj.GenerateResource.Cache
+C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.dll
+C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.pdb
+C:\Users\Dav\Visual C#\FD3\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+C:\Users\Dav\Visual C#\FD3\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
+C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.Resources.en_US.resources
+C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.csproj.GenerateResource.Cache
+C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.dll
+C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Release\HighlightSelection.pdb
