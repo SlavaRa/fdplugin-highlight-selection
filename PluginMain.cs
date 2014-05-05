@@ -39,7 +39,7 @@ namespace HighlightSelection
 		/// </summary> 
 		public String Name
 		{
-			get { return this.pluginName; }
+			get { return pluginName; }
 		}
 
 		/// <summary>
@@ -47,7 +47,7 @@ namespace HighlightSelection
 		/// </summary>
 		public String Guid
 		{
-			get { return this.pluginGuid; }
+			get { return pluginGuid; }
 		}
 
 		/// <summary>
@@ -55,7 +55,7 @@ namespace HighlightSelection
 		/// </summary> 
 		public String Author
 		{
-			get { return this.pluginAuth; }
+			get { return pluginAuth; }
 		}
 
 		/// <summary>
@@ -63,7 +63,7 @@ namespace HighlightSelection
 		/// </summary> 
 		public String Description
 		{
-			get { return this.pluginDesc; }
+			get { return pluginDesc; }
 		}
 
 		/// <summary>
@@ -71,7 +71,7 @@ namespace HighlightSelection
 		/// </summary> 
 		public String Help
 		{
-			get { return this.pluginHelp; }
+			get { return pluginHelp; }
 		}
 
 		/// <summary>
@@ -80,7 +80,7 @@ namespace HighlightSelection
 		[Browsable(false)]
 		public Object Settings
 		{
-			get { return this.settingObject; }
+			get { return settingObject; }
 		}
 
 		#endregion
@@ -92,9 +92,9 @@ namespace HighlightSelection
 		/// </summary>
 		public void Initialize()
 		{
-			this.InitBasics();
-			this.LoadSettings();
-			this.AddEventHandlers();
+	        InitBasics();
+			LoadSettings();
+			AddEventHandlers();
 		}
 
 
@@ -103,7 +103,7 @@ namespace HighlightSelection
 		/// </summary>
 		public void Dispose()
 		{
-			this.SaveSettings();
+		    SaveSettings();
 		}
 
 
@@ -159,7 +159,7 @@ namespace HighlightSelection
 			sci.SetStyling(sci.TextLength, 0);
 			sci.StartStyling(es, mask - 1);
 
-			if (this.settingObject.addLineMarker)
+			if ( settingObject.addLineMarker)
 			{
 				sci.MarkerDeleteAll(2);
 			}
@@ -174,8 +174,8 @@ namespace HighlightSelection
 			{
 				String pattern = text;
 				FRSearch search = new FRSearch(pattern);
-				search.WholeWord = this.settingObject.wholeWords;
-				search.NoCase = !this.settingObject.matchCase;
+				search.WholeWord =  settingObject.wholeWords;
+				search.NoCase = ! settingObject.matchCase;
 				search.Filter = SearchFilter.None;
 				return search.Matches(sci.Text);
 			}
@@ -203,15 +203,15 @@ namespace HighlightSelection
 				Int32 mask = 1 << sci.StyleBits;
 
 				sci.SetIndicStyle(0, (Int32)ScintillaNet.Enums.IndicatorStyle.Max);
-				sci.SetIndicFore(0, DataConverter.ColorToInt32(this.settingObject.highlightColor));
+				sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.highlightColor));
 				sci.StartStyling(position, mask);
 				sci.SetStyling(end - start, mask);
 				sci.StartStyling(es, mask - 1);
 
-				if (this.settingObject.addLineMarker)
+				if (settingObject.addLineMarker)
 				{
 					sci.MarkerAdd(line, 2);
-					sci.MarkerSetBack(2, DataConverter.ColorToInt32(this.settingObject.highlightColor));
+					sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.highlightColor));
 				}
 			}
 		}
@@ -237,8 +237,8 @@ namespace HighlightSelection
 		{
 			String dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
-			this.settingFilename = Path.Combine(dataPath, "Settings.fdb");
-			//this.pluginImage = PluginBase.MainForm.FindImage("100");
+			settingFilename = Path.Combine(dataPath, "Settings.fdb");
+			//pluginImage = PluginBase.MainForm.FindImage("100");
 		}
 
 		/// <summary>
@@ -256,12 +256,12 @@ namespace HighlightSelection
 		/// </summary>
 		public void LoadSettings()
 		{
-			this.settingObject = new Settings();
-			if (!File.Exists(this.settingFilename)) this.SaveSettings();
+			settingObject = new Settings();
+			if (!File.Exists(settingFilename)) SaveSettings();
 			else
 			{
-				Object obj = ObjectSerializer.Deserialize(this.settingFilename, this.settingObject);
-				this.settingObject = (Settings)obj;
+				Object obj = ObjectSerializer.Deserialize(settingFilename, settingObject);
+				settingObject = (Settings)obj;
 			}
 		}
 
@@ -270,7 +270,7 @@ namespace HighlightSelection
 		/// </summary>
 		public void SaveSettings()
 		{
-			ObjectSerializer.Serialize(this.settingFilename, this.settingObject);
+			ObjectSerializer.Serialize(settingFilename, settingObject);
 		}
 
 		#endregion
