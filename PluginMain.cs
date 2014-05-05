@@ -26,6 +26,14 @@ namespace HighlightSelection
 
 		#region Required Properties
 
+        /// <summary>
+        /// Api level of the plugin
+        /// </summary>
+        public int Api
+        {
+            get { return 1; }
+        }
+
 		/// <summary>
 		/// Name of the plugin
 		/// </summary> 
