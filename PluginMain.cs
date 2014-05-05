@@ -14,12 +14,12 @@ namespace HighlightSelection
 {
 	public class PluginMain : IPlugin
 	{
-		private String pluginName = "Highlight Selection";
-		private String pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
-		private String pluginHelp = "";
-		private String pluginDesc = "A plugin to highlight your selected text";
-		private String pluginAuth = "mike.cann@gmail.com";
-		private String settingFilename;
+		private string pluginName = "Highlight Selection";
+		private string pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
+		private string pluginHelp = "";
+		private string pluginDesc = "A plugin to highlight your selected text";
+		private string pluginAuth = "mike.cann@gmail.com";
+		private string settingFilename;
 		private Settings settingObject;
 		//private DockContent pluginPanel;
 		//private Image pluginImage;
@@ -37,7 +37,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Name of the plugin
 		/// </summary> 
-		public String Name
+		public string Name
 		{
 			get { return pluginName; }
 		}
@@ -45,7 +45,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// GUID of the plugin
 		/// </summary>
-		public String Guid
+		public string Guid
 		{
 			get { return pluginGuid; }
 		}
@@ -53,7 +53,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Author of the plugin
 		/// </summary> 
-		public String Author
+		public string Author
 		{
 			get { return pluginAuth; }
 		}
@@ -61,7 +61,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Description of the plugin
 		/// </summary> 
-		public String Description
+		public string Description
 		{
 			get { return pluginDesc; }
 		}
@@ -69,7 +69,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Web address for help
 		/// </summary> 
-		public String Help
+		public string Help
 		{
 			get { return pluginHelp; }
 		}
@@ -168,11 +168,11 @@ namespace HighlightSelection
 		/// <summary>
 		/// Gets search results for a sci control
 		/// </summary>
-		private List<SearchMatch> GetResults(ScintillaControl sci, String text)
+		private List<SearchMatch> GetResults(ScintillaControl sci, string text)
 		{
 			if (text != String.Empty && IsAlphaNumeric(text))
 			{
-				String pattern = text;
+				string pattern = text;
 				FRSearch search = new FRSearch(pattern);
 				search.WholeWord =  settingObject.wholeWords;
 				search.NoCase = ! settingObject.matchCase;
@@ -219,7 +219,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Check string is alphanumeric
 		/// </summary>
-		private Boolean IsAlphaNumeric(String strToCheck)
+		private Boolean IsAlphaNumeric(string strToCheck)
 		{
 			Regex objAlphaNumericPattern = new Regex("[^a-zA-Z0-9_]");
 
@@ -235,7 +235,7 @@ namespace HighlightSelection
 		/// </summary>
 		public void InitBasics()
 		{
-			String dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
+			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
 			//pluginImage = PluginBase.MainForm.FindImage("100");
