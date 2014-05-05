@@ -131,7 +131,7 @@ namespace HighlightSelection
         /// <summary>
 		/// DoubleClick handler
 		/// </summary>
-		public void onSciDoubleClick(ScintillaControl sender)
+        public void onSciDoubleClick(ScintillaControl sender)
 		{
 			RemoveHighlights(sender);
 			AddHighlights(sender, GetResults(sender, sender.SelText.Trim()));
@@ -165,7 +165,7 @@ namespace HighlightSelection
 		/// </summary>
 		private List<SearchMatch> GetResults(ScintillaControl sci, string text)
 		{
-            if (string.IsNullOrEmpty(text) || !IsAlphaNumeric(text)) return null;
+            if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_]")) return null;
 			FRSearch search = new FRSearch(text);
 			search.WholeWord = settingObject.WholeWords;
 			search.NoCase = !settingObject.MatchCase;
@@ -202,14 +202,6 @@ namespace HighlightSelection
 			}
             prevPos = sci.CurrentPos;
             timer.Start();
-		}
-
-		/// <summary>
-		/// Check string is alphanumeric
-		/// </summary>
-		private Boolean IsAlphaNumeric(string input)
-		{
-            return !Regex.IsMatch(input, "[^a-zA-Z0-9_]");
 		}
 
 		#endregion
