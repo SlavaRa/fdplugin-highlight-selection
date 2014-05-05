@@ -128,82 +128,6 @@ namespace HighlightSelection
 			}
 		}
 
-        /// <summary>
-		/// DoubleClick handler
-		/// </summary>
-        public void onSciDoubleClick(ScintillaControl sender)
-		{
-			RemoveHighlights(sender);
-			AddHighlights(sender, GetResults(sender, sender.SelText.Trim()));
-		}
-
-		/// <summary>
-		/// Modified Handler
-		/// </summary>
-		public void onSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
-		{
-			RemoveHighlights(sender);
-		}
-
-		/// <summary>
-		/// Removes the highlights from the correct sci control
-		/// </summary>
-		private void RemoveHighlights(ScintillaControl sci)
-		{
-			int es = sci.EndStyled;
-			int mask = (1 << sci.StyleBits);
-			sci.StartStyling(0, mask);
-			sci.SetStyling(sci.TextLength, 0);
-			sci.StartStyling(es, mask - 1);
-			if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
-            prevPos = -1;
-            timer.Stop();
-		}
-
-		/// <summary>
-		/// Gets search results for a sci control
-		/// </summary>
-		private List<SearchMatch> GetResults(ScintillaControl sci, string text)
-		{
-            if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_]")) return null;
-			FRSearch search = new FRSearch(text);
-			search.WholeWord = settingObject.WholeWords;
-			search.NoCase = !settingObject.MatchCase;
-			search.Filter = SearchFilter.None;
-			return search.Matches(sci.Text);
-		}
-
-		/// <summary>
-		/// Adds highlights to the correct sci control
-		/// </summary>
-		private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
-		{
-            if (matches == null) return;
-			foreach (SearchMatch match in matches)
-			{
-				int start = sci.MBSafePosition(match.Index);
-				int end = start + sci.MBSafeTextLength(match.Value);
-				int line = sci.LineFromPosition(start);
-				int position = start;
-				int es = sci.EndStyled;
-				int mask = 1 << sci.StyleBits;
-
-				sci.SetIndicStyle(0, (int)ScintillaNet.Enums.IndicatorStyle.Max);
-				sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.HighlightColor));
-				sci.StartStyling(position, mask);
-				sci.SetStyling(end - start, mask);
-				sci.StartStyling(es, mask - 1);
-
-				if (settingObject.AddLineMarker)
-				{
-					sci.MarkerAdd(line, 2);
-					sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.HighlightColor));
-				}
-			}
-            prevPos = sci.CurrentPos;
-            timer.Start();
-		}
-
 		#endregion
 
 		#region Custom Methods
@@ -211,7 +135,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Initializes important variables
 		/// </summary>
-		public void InitBasics()
+        private void InitBasics()
 		{
 			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
@@ -225,7 +149,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Adds the required event handlers
 		/// </summary> 
-		public void AddEventHandlers()
+        private void AddEventHandlers()
 		{
 			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave);
 		}
@@ -233,7 +157,7 @@ namespace HighlightSelection
 		/// <summary>
 		/// Loads the plugin settings
 		/// </summary>
-		public void LoadSettings()
+        private void LoadSettings()
 		{
 			settingObject = new Settings();
             if (!File.Exists(settingFilename))
@@ -250,10 +174,86 @@ namespace HighlightSelection
 		/// <summary>
 		/// Saves the plugin settings
 		/// </summary>
-		public void SaveSettings()
+		private void SaveSettings()
 		{
 			ObjectSerializer.Serialize(settingFilename, settingObject);
 		}
+
+        /// <summary>
+        /// DoubleClick handler
+        /// </summary>
+        private void onSciDoubleClick(ScintillaControl sender)
+        {
+            RemoveHighlights(sender);
+            AddHighlights(sender, GetResults(sender, sender.SelText.Trim()));
+        }
+
+        /// <summary>
+        /// Modified Handler
+        /// </summary>
+        private void onSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+        {
+            RemoveHighlights(sender);
+        }
+
+        /// <summary>
+        /// Adds highlights to the correct sci control
+        /// </summary>
+        private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
+        {
+            if (matches == null) return;
+            foreach (SearchMatch match in matches)
+            {
+                int start = sci.MBSafePosition(match.Index);
+                int end = start + sci.MBSafeTextLength(match.Value);
+                int line = sci.LineFromPosition(start);
+                int position = start;
+                int es = sci.EndStyled;
+                int mask = 1 << sci.StyleBits;
+
+                sci.SetIndicStyle(0, (int)ScintillaNet.Enums.IndicatorStyle.Max);
+                sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.HighlightColor));
+                sci.StartStyling(position, mask);
+                sci.SetStyling(end - start, mask);
+                sci.StartStyling(es, mask - 1);
+
+                if (settingObject.AddLineMarker)
+                {
+                    sci.MarkerAdd(line, 2);
+                    sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.HighlightColor));
+                }
+            }
+            prevPos = sci.CurrentPos;
+            timer.Start();
+        }
+
+        /// <summary>
+        /// Removes the highlights from the correct sci control
+        /// </summary>
+        private void RemoveHighlights(ScintillaControl sci)
+        {
+            int es = sci.EndStyled;
+            int mask = (1 << sci.StyleBits);
+            sci.StartStyling(0, mask);
+            sci.SetStyling(sci.TextLength, 0);
+            sci.StartStyling(es, mask - 1);
+            if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
+            prevPos = -1;
+            timer.Stop();
+        }
+
+        /// <summary>
+        /// Gets search results for a sci control
+        /// </summary>
+        private List<SearchMatch> GetResults(ScintillaControl sci, string text)
+        {
+            if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_]")) return null;
+            FRSearch search = new FRSearch(text);
+            search.WholeWord = settingObject.WholeWords;
+            search.NoCase = !settingObject.MatchCase;
+            search.Filter = SearchFilter.None;
+            return search.Matches(sci.Text);
+        }
 
         private void onTimerTick(object sender, EventArgs e)
         {
