@@ -153,8 +153,8 @@ namespace HighlightSelection
 		/// </summary>
 		private void RemoveHighlights(ScintillaControl sci)
 		{
-			Int32 es = sci.EndStyled;
-			Int32 mask = (1 << sci.StyleBits);
+			int es = sci.EndStyled;
+			int mask = (1 << sci.StyleBits);
 			sci.StartStyling(0, mask);
 			sci.SetStyling(sci.TextLength, 0);
 			sci.StartStyling(es, mask - 1);
@@ -195,14 +195,14 @@ namespace HighlightSelection
 
 			foreach (SearchMatch match in matches)
 			{
-				Int32 start = sci.MBSafePosition(match.Index);
-				Int32 end = start + sci.MBSafeTextLength(match.Value);
-				Int32 line = sci.LineFromPosition(start);
-				Int32 position = start;
-				Int32 es = sci.EndStyled;
-				Int32 mask = 1 << sci.StyleBits;
+				int start = sci.MBSafePosition(match.Index);
+				int end = start + sci.MBSafeTextLength(match.Value);
+				int line = sci.LineFromPosition(start);
+				int position = start;
+				int es = sci.EndStyled;
+				int mask = 1 << sci.StyleBits;
 
-				sci.SetIndicStyle(0, (Int32)ScintillaNet.Enums.IndicatorStyle.Max);
+				sci.SetIndicStyle(0, (int)ScintillaNet.Enums.IndicatorStyle.Max);
 				sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.highlightColor));
 				sci.StartStyling(position, mask);
 				sci.SetStyling(end - start, mask);
