@@ -153,7 +153,7 @@ namespace HighlightSelection
 			sci.StartStyling(0, mask);
 			sci.SetStyling(sci.TextLength, 0);
 			sci.StartStyling(es, mask - 1);
-			if (settingObject.addLineMarker) sci.MarkerDeleteAll(2);
+			if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
 		}
 
 		/// <summary>
@@ -163,8 +163,8 @@ namespace HighlightSelection
 		{
             if (string.IsNullOrEmpty(text) || !IsAlphaNumeric(text)) return null;
 			FRSearch search = new FRSearch(text);
-			search.WholeWord = settingObject.wholeWords;
-			search.NoCase = !settingObject.matchCase;
+			search.WholeWord = settingObject.WholeWords;
+			search.NoCase = !settingObject.MatchCase;
 			search.Filter = SearchFilter.None;
 			return search.Matches(sci.Text);
 		}
@@ -185,15 +185,15 @@ namespace HighlightSelection
 				int mask = 1 << sci.StyleBits;
 
 				sci.SetIndicStyle(0, (int)ScintillaNet.Enums.IndicatorStyle.Max);
-				sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.highlightColor));
+				sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.HighlightColor));
 				sci.StartStyling(position, mask);
 				sci.SetStyling(end - start, mask);
 				sci.StartStyling(es, mask - 1);
 
-				if (settingObject.addLineMarker)
+				if (settingObject.AddLineMarker)
 				{
 					sci.MarkerAdd(line, 2);
-					sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.highlightColor));
+					sci.MarkerSetBack(2, DataConverter.ColorToInt32(settingObject.HighlightColor));
 				}
 			}
 		}
