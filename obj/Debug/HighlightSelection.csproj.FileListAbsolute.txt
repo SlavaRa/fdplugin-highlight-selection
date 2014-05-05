@@ -14,3 +14,12 @@ C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Debug\Highlig
 C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Debug\HighlightSelection.csproj.GenerateResource.Cache
 C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Debug\HighlightSelection.dll
 C:\Users\Dav\Visual C#\FD3\External\Plugins\HighlightSelection\obj\Debug\HighlightSelection.pdb
+D:\c#\FlashDevelop-Highlight-plugin\obj\Debug\HighlightSelection.csprojResolveAssemblyReference.cache
+D:\c#\FlashDevelop-Highlight-plugin\obj\Debug\HighlightSelection.Resources.en_US.resources
+D:\c#\FlashDevelop-Highlight-plugin\obj\Debug\HighlightSelection.csproj.GenerateResource.Cache
+D:\c#\FlashDevelop-Highlight-plugin\obj\Debug\HighlightSelection.dll
+D:\c#\FlashDevelop-Highlight-plugin\obj\Debug\HighlightSelection.pdb
+D:\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+D:\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
+D:\c#\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+D:\c#\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
