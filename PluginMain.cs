@@ -21,8 +21,6 @@ namespace HighlightSelection
 		private string pluginAuth = "mike.cann@gmail.com";
 		private string settingFilename;
 		private Settings settingObject;
-		//private DockContent pluginPanel;
-		//private Image pluginImage;
 
 		#region Required Properties
 
@@ -110,22 +108,21 @@ namespace HighlightSelection
 		/// </summary>
 		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
 		{
+            ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
 			switch (e.Type)
 			{
 				// Catches FileSwitch event and displays the filename it in the PluginUI.
 				case EventType.FileSwitch:
-
-					Console.WriteLine(PluginBase.MainForm.CurrentDocument.IsEditable);
-
-					if (PluginBase.MainForm.CurrentDocument.IsEditable)
+					Console.WriteLine(doc.IsEditable);
+					if (doc.IsEditable)
 					{
-						PluginBase.MainForm.CurrentDocument.SciControl.DoubleClick += new ScintillaNet.DoubleClickHandler(SciControl_DoubleClick);
-						PluginBase.MainForm.CurrentDocument.SciControl.Modified += new ScintillaNet.ModifiedHandler(SciControl_Modified);
+						doc.SciControl.DoubleClick += SciControl_DoubleClick;
+						doc.SciControl.Modified += SciControl_Modified;
 					}
-				break;
+				    break;
 				case EventType.FileSave:
-					RemoveHighlights(PluginBase.MainForm.CurrentDocument.SciControl);
-				break;
+					RemoveHighlights(doc.SciControl);
+				    break;
 			}
 		}
 
@@ -156,11 +153,7 @@ namespace HighlightSelection
 			sci.StartStyling(0, mask);
 			sci.SetStyling(sci.TextLength, 0);
 			sci.StartStyling(es, mask - 1);
-
-			if ( settingObject.addLineMarker)
-			{
-				sci.MarkerDeleteAll(2);
-			}
+			if (settingObject.addLineMarker) sci.MarkerDeleteAll(2);
 		}
 
 		/// <summary>
@@ -168,17 +161,12 @@ namespace HighlightSelection
 		/// </summary>
 		private List<SearchMatch> GetResults(ScintillaControl sci, string text)
 		{
-			if (text != String.Empty && IsAlphaNumeric(text))
-			{
-				string pattern = text;
-				FRSearch search = new FRSearch(pattern);
-				search.WholeWord =  settingObject.wholeWords;
-				search.NoCase = ! settingObject.matchCase;
-				search.Filter = SearchFilter.None;
-				return search.Matches(sci.Text);
-			}
-
-			return null;
+            if (string.IsNullOrEmpty(text) || !IsAlphaNumeric(text)) return null;
+			FRSearch search = new FRSearch(text);
+			search.WholeWord = settingObject.wholeWords;
+			search.NoCase = !settingObject.matchCase;
+			search.Filter = SearchFilter.None;
+			return search.Matches(sci.Text);
 		}
 
 		/// <summary>
@@ -186,11 +174,7 @@ namespace HighlightSelection
 		/// </summary>
 		private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
 		{
-			if (matches == null)
-			{
-				return;
-			}
-
+			if (matches == null) return;
 			foreach (SearchMatch match in matches)
 			{
 				int start = sci.MBSafePosition(match.Index);
@@ -217,11 +201,9 @@ namespace HighlightSelection
 		/// <summary>
 		/// Check string is alphanumeric
 		/// </summary>
-		private Boolean IsAlphaNumeric(string strToCheck)
+		private Boolean IsAlphaNumeric(string input)
 		{
-			Regex objAlphaNumericPattern = new Regex("[^a-zA-Z0-9_]");
-
-			return !objAlphaNumericPattern.IsMatch(strToCheck);
+            return !Regex.IsMatch(input, "[^a-zA-Z0-9_]");
 		}
 
 		#endregion
@@ -236,7 +218,6 @@ namespace HighlightSelection
 			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
-			//pluginImage = PluginBase.MainForm.FindImage("100");
 		}
 
 		/// <summary>
@@ -244,9 +225,7 @@ namespace HighlightSelection
 		/// </summary> 
 		public void AddEventHandlers()
 		{
-			// Set events you want to listen (combine as flags)
-			EventManager.AddEventHandler(this, EventType.FileSwitch);
-			EventManager.AddEventHandler(this, EventType.FileSave);
+			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave);
 		}
 
 		/// <summary>
@@ -256,11 +235,7 @@ namespace HighlightSelection
 		{
 			settingObject = new Settings();
 			if (!File.Exists(settingFilename)) SaveSettings();
-			else
-			{
-				Object obj = ObjectSerializer.Deserialize(settingFilename, settingObject);
-				settingObject = (Settings)obj;
-			}
+			else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
 		}
 
 		/// <summary>
