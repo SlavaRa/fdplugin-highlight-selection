@@ -1,3 +1,4 @@
+using ScintillaNet.Enums;
 using System;
 using System.ComponentModel;
 using System.Drawing;
@@ -11,6 +12,7 @@ namespace HighlightSelection
         public const bool DEFAULT_MATCH_CASE = true;
         public const bool DEFAULT_ADD_LINE_MARKER = true;
         public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = false;
+        public const IndicatorStyle DEFAULT_HIGHLIGHT_STYLE = IndicatorStyle.Box;
 
         [Category("General")]
         [DisplayName("Highlight Color")]
@@ -39,7 +41,11 @@ namespace HighlightSelection
         [Category("General")]
         [DisplayName("Highlight references to symbol under cursor")]
         [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]
-        public Boolean HighlightUnderCursor { get; set; }
+        public bool HighlightUnderCursor { get; set; }
 
+        [Category("General")]
+        [DisplayName("Highlight style")]
+        [DefaultValue(typeof(IndicatorStyle), "Box")]
+        public IndicatorStyle HighlightStyle { get; set; }
 	}
 }
