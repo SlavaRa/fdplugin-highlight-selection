@@ -10,6 +10,7 @@ using PluginCore.FRService;
 using System.Collections.Generic;
 using ScintillaNet;
 using System.Windows.Forms;
+using ASCompletion.Completion;
 
 namespace HighlightSelection
 {
@@ -284,12 +285,15 @@ namespace HighlightSelection
 
         private void UpdateHighlightUnderCursor(ScintillaControl Sci)
         {
-            string newToken = Sci.GetWordFromPosition(Sci.CurrentPos);
+            int currentPos = Sci.CurrentPos;
+            string newToken = Sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
             if (newToken == prevToken) return;
             RemoveHighlights(Sci);
             prevToken = newToken;
-            if (!string.IsNullOrEmpty(prevToken)) AddHighlights(Sci, GetResults(Sci, prevToken));
+            if (string.IsNullOrEmpty(prevToken)) return;
+            ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+            if (!result.IsNull()) AddHighlights(Sci, GetResults(Sci, prevToken));
         }
 
 		#endregion
