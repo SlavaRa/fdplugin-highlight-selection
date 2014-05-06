@@ -128,6 +128,7 @@ namespace HighlightSelection
 			{
 				// Catches FileSwitch event and displays the filename it in the PluginUI.
 				case EventType.FileSwitch:
+                    RemoveHighlights(doc.SciControl);
 					if (doc.IsEditable)
 					{
                         doc.SciControl.DoubleClick += onSciDoubleClick;
@@ -135,8 +136,7 @@ namespace HighlightSelection
 					}
 				    break;
 				case EventType.FileSave:
-                    if (!settingObject.HighlightUnderCursorEnabled) RemoveHighlights(doc.SciControl);
-                    else UpdateHighlightUnderCursor(doc.SciControl);
+                    RemoveHighlights(doc.SciControl);
                     break;
                 case EventType.SettingChanged:
                     UpdateHighlightUnderCursorTimer();
