@@ -10,6 +10,9 @@ using PluginCore.FRService;
 using System.Collections.Generic;
 using ScintillaNet;
 using System.Windows.Forms;
+using ASCompletion.Completion;
+using ASCompletion.Model;
+using ASCompletion.Context;
 
 namespace HighlightSelection
 {
@@ -24,6 +27,7 @@ namespace HighlightSelection
 		private Settings settingObject;
         private Timer timer;
         private int prevPos;
+        private ASResult prevResult;
         private string prevToken;
 
 		#region Required Properties
@@ -200,6 +204,7 @@ namespace HighlightSelection
         private void onSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
+            prevResult = null;
             prevToken = sender.SelText.Trim();
             AddHighlights(sender, GetResults(sender, prevToken));
         }
@@ -264,14 +269,14 @@ namespace HighlightSelection
         /// <summary>
         /// Gets search results for a sci control
         /// </summary>
-        private List<SearchMatch> GetResults(ScintillaControl sci, string text)
+        private List<SearchMatch> GetResults(ScintillaControl Sci, string text)
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_]")) return null;
             FRSearch search = new FRSearch(text);
             search.WholeWord = settingObject.WholeWords;
             search.NoCase = !settingObject.MatchCase;
             search.Filter = SearchFilter.None;
-            return search.Matches(sci.Text);
+            return search.Matches(Sci.Text);
         }
 
         private void onTimerTick(object sender, EventArgs e)
@@ -284,14 +289,45 @@ namespace HighlightSelection
 
         private void UpdateHighlightUnderCursor(ScintillaControl Sci)
         {
-            string newToken = Sci.GetWordFromPosition(Sci.CurrentPos);
+            int currentPos = Sci.CurrentPos;
+            string newToken = Sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
-            if (newToken == prevToken) return;
+            if (string.IsNullOrEmpty(newToken))
+            {
+                RemoveHighlights(Sci);
+                return;
+            }
+            if (prevResult == null && prevToken == newToken) return;
+            ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+            if (result.IsNull())
+            {
+                RemoveHighlights(Sci);
+                return;
+            }
+            if (result == prevResult) return;
             RemoveHighlights(Sci);
             prevToken = newToken;
-            if (!string.IsNullOrEmpty(prevToken)) AddHighlights(Sci, GetResults(Sci, prevToken));
+            prevResult = result;
+            List<SearchMatch> matches = GetResults(Sci, prevToken);
+            MemberModel contextMember = null;
+            if (result.Member != null)
+            {
+                if ((result.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) contextMember = result.Context.ContextFunction;
+                else if (result.InClass == ASContext.Context.CurrentClass) contextMember = result.InClass;
+            }
+            if(contextMember != null)
+            {
+                List<SearchMatch> tmpMatches = new List<SearchMatch>();
+                int lineFrom = contextMember.LineFrom;
+                int lineTo = contextMember.LineTo;
+                foreach (SearchMatch match in matches)
+                    if (match.Line >= lineFrom && match.Line <= lineTo)
+                        tmpMatches.Add(match);
+                matches = tmpMatches;
+            }
+            AddHighlights(Sci, matches);
         }
 
-		#endregion
+        #endregion
     }
 }
