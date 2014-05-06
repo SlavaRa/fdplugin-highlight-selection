@@ -168,6 +168,7 @@ namespace HighlightSelection
                 settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
                 settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
                 settingObject.HighlightUnderCursor = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
+                settingObject.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
                 SaveSettings();
             }
             else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
@@ -226,7 +227,7 @@ namespace HighlightSelection
                 int es = sci.EndStyled;
                 int mask = 1 << sci.StyleBits;
 
-                sci.SetIndicStyle(0, (int)ScintillaNet.Enums.IndicatorStyle.Max);
+                sci.SetIndicStyle(0, (int)settingObject.HighlightStyle);
                 sci.SetIndicFore(0, DataConverter.ColorToInt32(settingObject.HighlightColor));
                 sci.StartStyling(position, mask);
                 sci.SetStyling(end - start, mask);
