@@ -25,7 +25,8 @@ namespace HighlightSelection
 		private string pluginAuth = "mike.cann@gmail.com";
 		private string settingFilename;
 		private Settings settingObject;
-        private Timer timer;
+        private Timer highlightUnderCursorTimer;
+        private Timer tempo;
         private int prevPos;
         private ASResult prevResult;
         private string prevToken;
@@ -101,7 +102,8 @@ namespace HighlightSelection
 	        InitBasics();
 			LoadSettings();
 			AddEventHandlers();
-            InitTimer();
+            InitTimers();
+            UpdateHighlightUnderCursorTimer();
 		}
 
 		/// <summary>
@@ -109,8 +111,10 @@ namespace HighlightSelection
 		/// </summary>
 		public void Dispose()
 		{
-            timer.Dispose();
-            timer = null;
+            highlightUnderCursorTimer.Dispose();
+            highlightUnderCursorTimer = null;
+            tempo.Dispose();
+            tempo = null;
 		    SaveSettings();
 		}
 
@@ -131,8 +135,11 @@ namespace HighlightSelection
 					}
 				    break;
 				case EventType.FileSave:
-                    if (!settingObject.HighlightUnderCursor) RemoveHighlights(doc.SciControl);
+                    if (!settingObject.HighlightUnderCursorEnabled) RemoveHighlights(doc.SciControl);
                     else UpdateHighlightUnderCursor(doc.SciControl);
+                    break;
+                case EventType.SettingChanged:
+                    UpdateHighlightUnderCursorTimer();
 				    break;
 			}
 		}
@@ -156,7 +163,7 @@ namespace HighlightSelection
 		/// </summary> 
         private void AddEventHandlers()
 		{
-			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave);
+			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
 		}
 
 		/// <summary>
@@ -171,8 +178,9 @@ namespace HighlightSelection
                 settingObject.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
                 settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
                 settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
-                settingObject.HighlightUnderCursor = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
                 settingObject.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
+                settingObject.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
+                settingObject.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
                 SaveSettings();
             }
             else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
@@ -189,13 +197,22 @@ namespace HighlightSelection
         /// <summary>
         /// 
         /// </summary>
-        private void InitTimer()
+        private void InitTimers()
         {
-            prevPos = -1;
-            timer = new Timer();
-            timer.Interval = 400;
-            timer.Tick += onTimerTick;
-            if (settingObject.HighlightUnderCursor) timer.Start();
+            highlightUnderCursorTimer = new Timer();
+            highlightUnderCursorTimer.Tick += highlighUnderCursorTimerTick;
+            tempo = new Timer();
+            tempo.Interval = PluginBase.Settings.DisplayDelay;
+            tempo.Tick += onTempoTick;
+            tempo.Start();
+        }
+
+        private void UpdateHighlightUnderCursorTimer()
+        {
+            if (settingObject.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
+                settingObject.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+            highlightUnderCursorTimer.Interval = settingObject.HighlightUnderCursorUpdateInteval;
+            if (!settingObject.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
         }
 
         /// <summary>
@@ -247,7 +264,6 @@ namespace HighlightSelection
                 }
             }
             prevPos = sci.CurrentPos;
-            if (!settingObject.HighlightUnderCursor) timer.Start();
         }
 
         /// <summary>
@@ -263,7 +279,7 @@ namespace HighlightSelection
             if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
             prevPos = -1;
             prevToken = string.Empty;
-            if (!settingObject.HighlightUnderCursor) timer.Stop();
+            prevResult = null;
         }
 
         /// <summary>
@@ -279,12 +295,40 @@ namespace HighlightSelection
             return search.Matches(Sci.Text);
         }
 
-        private void onTimerTick(object sender, EventArgs e)
+        private void onTempoTick(object sender, EventArgs e)
         {
             ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
             if (Sci == null) return;
-            if (settingObject.HighlightUnderCursor) UpdateHighlightUnderCursor(Sci);
-            else if (Sci.CurrentPos != prevPos) RemoveHighlights(Sci);
+            int currentPos = Sci.CurrentPos;
+            if (currentPos == prevPos) return;
+            string newToken = Sci.GetWordFromPosition(currentPos);
+            if (!settingObject.HighlightUnderCursorEnabled)
+            {
+                if (newToken != prevToken) RemoveHighlights(Sci);
+            }
+            else
+            {
+                if (prevResult != null)
+                {
+                    ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+                    if (result.Member != prevResult.Member || result.Type != prevResult.Type)
+                    {
+                        RemoveHighlights(Sci);
+                        highlightUnderCursorTimer.Start();
+                    }
+                }
+                else
+                {
+                    RemoveHighlights(Sci);
+                    highlightUnderCursorTimer.Start();
+                }
+            }
+        }
+
+        private void highlighUnderCursorTimerTick(object sender, EventArgs e)
+        {
+            ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            if (Sci != null) UpdateHighlightUnderCursor(Sci);
         }
 
         private void UpdateHighlightUnderCursor(ScintillaControl Sci)
@@ -304,7 +348,7 @@ namespace HighlightSelection
                 RemoveHighlights(Sci);
                 return;
             }
-            if (result == prevResult) return;
+            if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type)) return;
             RemoveHighlights(Sci);
             prevToken = newToken;
             prevResult = result;
@@ -325,6 +369,7 @@ namespace HighlightSelection
                         tmpMatches.Add(match);
                 matches = tmpMatches;
             }
+            highlightUnderCursorTimer.Stop();
             AddHighlights(Sci, matches);
         }
 
