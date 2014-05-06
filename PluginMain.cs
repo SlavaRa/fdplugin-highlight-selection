@@ -237,33 +237,32 @@ namespace HighlightSelection
         /// <summary>
         /// Adds highlights to the correct sci control
         /// </summary>
-        private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
+        private void AddHighlights(ScintillaControl Sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
             int highlightStyle = (int)settingObject.HighlightStyle;
             int highlightColor = DataConverter.ColorToInt32(settingObject.HighlightColor);
+            int es = Sci.EndStyled;
+            int mask = 1 << Sci.StyleBits;
+            bool addLineMarker = settingObject.AddLineMarker;
             foreach (SearchMatch match in matches)
             {
-                int start = sci.MBSafePosition(match.Index);
-                int end = start + sci.MBSafeTextLength(match.Value);
-                int line = sci.LineFromPosition(start);
+                int start = Sci.MBSafePosition(match.Index);
+                int end = start + Sci.MBSafeTextLength(match.Value);
+                int line = Sci.LineFromPosition(start);
                 int position = start;
-                int es = sci.EndStyled;
-                int mask = 1 << sci.StyleBits;
-
-                sci.SetIndicStyle(0, highlightStyle);
-                sci.SetIndicFore(0, highlightColor);
-                sci.StartStyling(position, mask);
-                sci.SetStyling(end - start, mask);
-                sci.StartStyling(es, mask - 1);
-
-                if (settingObject.AddLineMarker)
+                Sci.SetIndicStyle(0, highlightStyle);
+                Sci.SetIndicFore(0, highlightColor);
+                Sci.StartStyling(position, mask);
+                Sci.SetStyling(end - start, mask);
+                Sci.StartStyling(es, mask - 1);
+                if (addLineMarker)
                 {
-                    sci.MarkerAdd(line, 2);
-                    sci.MarkerSetBack(2, highlightColor);
+                    Sci.MarkerAdd(line, 2);
+                    Sci.MarkerSetBack(2, highlightColor);
                 }
             }
-            prevPos = sci.CurrentPos;
+            prevPos = Sci.CurrentPos;
         }
 
         /// <summary>
@@ -272,7 +271,7 @@ namespace HighlightSelection
         private void RemoveHighlights(ScintillaControl sci)
         {
             int es = sci.EndStyled;
-            int mask = (1 << sci.StyleBits);
+            int mask = 1 << sci.StyleBits;
             sci.StartStyling(0, mask);
             sci.SetStyling(sci.TextLength, 0);
             sci.StartStyling(es, mask - 1);
