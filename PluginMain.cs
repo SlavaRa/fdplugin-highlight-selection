@@ -307,6 +307,7 @@ namespace HighlightSelection
             }
             else
             {
+                if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
                 if (prevResult != null)
                 {
                     ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
@@ -322,6 +323,7 @@ namespace HighlightSelection
                     highlightUnderCursorTimer.Start();
                 }
             }
+            prevPos = currentPos;
         }
 
         private void highlighUnderCursorTimerTick(object sender, EventArgs e)
@@ -352,6 +354,7 @@ namespace HighlightSelection
             prevToken = newToken;
             prevResult = result;
             List<SearchMatch> matches = GetResults(Sci, prevToken);
+            if (matches == null) return;
             MemberModel contextMember = null;
             if (result.Member != null)
             {
