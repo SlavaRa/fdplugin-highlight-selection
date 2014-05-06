@@ -286,7 +286,7 @@ namespace HighlightSelection
         /// </summary>
         private List<SearchMatch> GetResults(ScintillaControl Sci, string text)
         {
-            if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_]")) return null;
+            if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
             FRSearch search = new FRSearch(text);
             search.WholeWord = settingObject.WholeWords;
             search.NoCase = !settingObject.MatchCase;
