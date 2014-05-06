@@ -12,6 +12,7 @@ namespace HighlightSelection
         public const bool DEFAULT_MATCH_CASE = true;
         public const bool DEFAULT_ADD_LINE_MARKER = true;
         public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = false;
+        public const int DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL = 100;
         public const IndicatorStyle DEFAULT_HIGHLIGHT_STYLE = IndicatorStyle.Box;
 
         [Category("General")]
@@ -39,13 +40,18 @@ namespace HighlightSelection
         public bool AddLineMarker {get; set;}
 
         [Category("General")]
-        [DisplayName("Highlight references to symbol under cursor")]
-        [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]
-        public bool HighlightUnderCursor { get; set; }
-
-        [Category("General")]
         [DisplayName("Highlight style")]
         [DefaultValue(typeof(IndicatorStyle), "Box")]
         public IndicatorStyle HighlightStyle { get; set; }
+
+        [Category("Highlight references to symbol under cursor")]
+        [DisplayName("Enabled")]
+        [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]
+        public bool HighlightUnderCursorEnabled { get; set; }
+
+        [Category("Highlight references to symbol under cursor")]
+        [DisplayName("Update interval")]
+        [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)]
+        public int HighlightUnderCursorUpdateInteval { get; set; }
 	}
 }
