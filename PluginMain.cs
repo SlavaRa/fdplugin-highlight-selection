@@ -344,7 +344,7 @@ namespace HighlightSelection
             }
             if (prevResult == null && prevToken == newToken) return;
             ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
-            if (result.IsNull())
+            if (result == null || result.IsNull())
             {
                 RemoveHighlights(Sci);
                 return;
@@ -353,26 +353,44 @@ namespace HighlightSelection
             RemoveHighlights(Sci);
             prevToken = newToken;
             prevResult = result;
-            List<SearchMatch> matches = GetResults(Sci, prevToken);
+            List<SearchMatch> matches = FilterResults(GetResults(Sci, prevToken), result, Sci);
             if (matches == null) return;
-            MemberModel contextMember = null;
-            if (result.Member != null)
-            {
-                if ((result.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) contextMember = result.Context.ContextFunction;
-                else if (result.InClass == ASContext.Context.CurrentClass) contextMember = result.InClass;
-            }
-            if(contextMember != null)
-            {
-                List<SearchMatch> tmpMatches = new List<SearchMatch>();
-                int lineFrom = contextMember.LineFrom;
-                int lineTo = contextMember.LineTo;
-                foreach (SearchMatch match in matches)
-                    if (match.Line >= lineFrom && match.Line <= lineTo)
-                        tmpMatches.Add(match);
-                matches = tmpMatches;
-            }
             highlightUnderCursorTimer.Stop();
             AddHighlights(Sci, matches);
+        }
+
+        private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl Sci)
+        {
+            if (matches == null) return null;
+            MemberModel contextMember = null;
+            bool isLocalVar = false;
+            if (exprType.Member != null)
+            {
+                if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0)
+                {
+                    contextMember = exprType.Context.ContextFunction;
+                    isLocalVar = true;
+                }
+                else contextMember = ASContext.Context.CurrentClass;
+            }
+            if (contextMember == null) return matches;
+            List<SearchMatch> newMatches = new List<SearchMatch>();
+            int lineFrom = contextMember.LineFrom;
+            int lineTo = contextMember.LineTo;
+            foreach (SearchMatch m in matches)
+            {
+                if (isLocalVar && (m.Line < lineFrom || m.Line > lineTo)) continue;
+                exprType = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(m.Index, true));
+                if (exprType != null && exprType.Member != null)
+                {
+                    if (!isLocalVar)
+                    {
+                        if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) == 0) newMatches.Add(m);
+                    }
+                    else if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) newMatches.Add(m);
+                }
+            }
+            return newMatches;
         }
 
         #endregion
