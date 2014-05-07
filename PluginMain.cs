@@ -359,6 +359,13 @@ namespace HighlightSelection
             AddHighlights(Sci, matches);
         }
 
+        /// <summary>
+        /// TODO slavara: IMPLEMENT ME
+        /// </summary>
+        /// <param name="matches"></param>
+        /// <param name="exprType"></param>
+        /// <param name="Sci"></param>
+        /// <returns></returns>
         private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl Sci)
         {
             if (matches == null) return null;
