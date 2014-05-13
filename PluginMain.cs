@@ -329,7 +329,7 @@ namespace HighlightSelection
                 {
                     ASResult result = null;
                     if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
-                    if (result != null && result.Member != prevResult.Member || result.Type != prevResult.Type)
+                    if (result == null || result.Member != prevResult.Member || result.Type != prevResult.Type)
                     {
                         RemoveHighlights(Sci);
                         highlightUnderCursorTimer.Start();
