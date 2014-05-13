@@ -329,7 +329,7 @@ namespace HighlightSelection
                 {
                     ASResult result = null;
                     if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
-                    if (result == null || result.Member != prevResult.Member || result.Type != prevResult.Type)
+                    if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
                     {
                         RemoveHighlights(Sci);
                         highlightUnderCursorTimer.Start();
@@ -375,7 +375,7 @@ namespace HighlightSelection
                 RemoveHighlights(Sci);
                 return;
             }
-            if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type)) return;
+            if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)) return;
             RemoveHighlights(Sci);
             prevToken = newToken;
             prevResult = result;
