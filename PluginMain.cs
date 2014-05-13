@@ -207,6 +207,9 @@ namespace HighlightSelection
             tempo.Start();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void UpdateHighlightUnderCursorTimer()
         {
             if (settingObject.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
@@ -294,6 +297,9 @@ namespace HighlightSelection
             return search.Matches(Sci.Text);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void onTempoTick(object sender, EventArgs e)
         {
             ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
@@ -326,12 +332,18 @@ namespace HighlightSelection
             prevPos = currentPos;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void highlighUnderCursorTimerTick(object sender, EventArgs e)
         {
             ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
             if (Sci != null) UpdateHighlightUnderCursor(Sci);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void UpdateHighlightUnderCursor(ScintillaControl Sci)
         {
             int currentPos = Sci.CurrentPos;
