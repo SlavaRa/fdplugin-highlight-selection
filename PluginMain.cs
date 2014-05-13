@@ -208,6 +208,17 @@ namespace HighlightSelection
         }
 
         /// <summary>
+        /// Checks if the file is ok for refactoring
+        /// </summary>
+        private bool IsValidFile(string file)
+        {
+            IProject project = PluginBase.CurrentProject;
+            if (project == null) return false;
+            string ext = Path.GetExtension(file);
+            return (ext == ".as" || ext == ".hx" || ext == ".ls") && PluginBase.CurrentProject.DefaultSearchFilter.Contains(ext);
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         private void UpdateHighlightUnderCursorTimer()
@@ -346,6 +357,7 @@ namespace HighlightSelection
         /// </summary>
         private void UpdateHighlightUnderCursor(ScintillaControl Sci)
         {
+            if (!IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) return;
             int currentPos = Sci.CurrentPos;
             string newToken = Sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
