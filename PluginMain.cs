@@ -327,8 +327,9 @@ namespace HighlightSelection
                 if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
                 if (prevResult != null)
                 {
-                    ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
-                    if (result.Member != prevResult.Member || result.Type != prevResult.Type)
+                    ASResult result = null;
+                    if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+                    if (result != null && result.Member != prevResult.Member || result.Type != prevResult.Type)
                     {
                         RemoveHighlights(Sci);
                         highlightUnderCursorTimer.Start();
@@ -367,7 +368,8 @@ namespace HighlightSelection
                 return;
             }
             if (prevResult == null && prevToken == newToken) return;
-            ASResult result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+            ASResult result = null;
+            if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
             if (result == null || result.IsNull())
             {
                 RemoveHighlights(Sci);
