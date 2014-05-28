@@ -284,12 +284,15 @@ namespace HighlightSelection
         /// </summary>
         private void RemoveHighlights(ScintillaControl sci)
         {
-            int es = sci.EndStyled;
-            int mask = 1 << sci.StyleBits;
-            sci.StartStyling(0, mask);
-            sci.SetStyling(sci.TextLength, 0);
-            sci.StartStyling(es, mask - 1);
-            if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
+            if (sci != null)
+            {
+                int es = sci.EndStyled;
+                int mask = 1 << sci.StyleBits;
+                sci.StartStyling(0, mask);
+                sci.SetStyling(sci.TextLength, 0);
+                sci.StartStyling(es, mask - 1);
+                if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
+            }
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
