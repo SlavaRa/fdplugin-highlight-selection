@@ -28,3 +28,5 @@ D:\projects\FlashDevelop-fork-work\FlashDevelop\Bin\Debug\Plugins\HighlightSelec
 D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.csprojResolveAssemblyReference.cache
 D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.dll
 D:\projects\flashdevelop-highlight-selected-plugin\obj\Debug\HighlightSelection.pdb
+D:\projects\FlashDevelop-fork\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
+D:\projects\FlashDevelop-fork\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
