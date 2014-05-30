@@ -17,27 +17,27 @@ namespace HighlightSelection
 
         [Category("General")]
         [DisplayName("Highlight Color")]
-		[Description("The color to highlight the selected text.")]
-		[DefaultValue(typeof(Color), "Red")]
-		public Color HighlightColor {get; set;}
+        [Description("The color to highlight the selected text.")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color HighlightColor { get; set; }
 
         [Category("General")]
-		[DisplayName("Highlight Whole Words")]
-		[Description("Only highlights whole words.")]
+        [DisplayName("Highlight Whole Words")]
+        [Description("Only highlights whole words.")]
         [DefaultValue(DEFAULT_WHOLE_WORD)]
-		public bool WholeWords {get; set;}
+        public bool WholeWords { get; set; }
 
         [Category("General")]
-		[DisplayName("Match Case")]
-		[Description("Only highlights text with the same case.")]
+        [DisplayName("Match Case")]
+        [Description("Only highlights text with the same case.")]
         [DefaultValue(DEFAULT_MATCH_CASE)]
-		public bool MatchCase {get; set;}
+        public bool MatchCase { get; set; }
 
         [Category("General")]
-		[DisplayName("Add Line Marker")]
-		[Description("Adds a line marker next to every highlight.")]
+        [DisplayName("Add Line Marker")]
+        [Description("Adds a line marker next to every highlight.")]
         [DefaultValue(DEFAULT_ADD_LINE_MARKER)]
-        public bool AddLineMarker {get; set;}
+        public bool AddLineMarker { get; set; }
 
         [Category("General")]
         [DisplayName("Highlight style")]
@@ -54,16 +54,20 @@ namespace HighlightSelection
         [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)]
         public int HighlightUnderCursorUpdateInteval { get; set; }
 
-        [Category("Highlight references to symbol under cursor")]
-        [DisplayName("Variables color")]
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Accessors")]
+        public Color AccessorsColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Variables")]
         public Color VariablesColor { get; set; }
 
-        [Category("Highlight references to symbol under cursor")]
-        [DisplayName("Member functions color")]
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Member functions")]
         public Color MemberFunctionsColor { get; set; }
 
-        [Category("Highlight references to symbol under cursor")]
-        [DisplayName("Local variables color")]
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Local variables")]
         public Color LocalVariablesColor { get; set; }
 	}
 }
