@@ -83,5 +83,15 @@ namespace HighlightSelection
         [DisplayName("Local variable")]
         [DefaultValue(typeof(Color), "Red")]
         public Color LocalVariableColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Static method")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color StaticMethodColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Method")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color MethodColor { get; set; }
 	}
 }
