@@ -176,45 +176,9 @@ namespace HighlightSelection
 		/// </summary>
         private void LoadSettings()
 		{
-            bool changed = false;
 			settings = new Settings();
-            if (!File.Exists(settingFilename))
-            {
-                settings.HighlightColor = Color.Red;
-                settings.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
-                settings.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
-                settings.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
-                settings.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
-                settings.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
-                settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-                settings.AccessorColor = Color.Red;
-                settings.VariableColor = Color.Red;
-                settings.MemberFunctionColor = Color.Red;
-                settings.LocalVariableColor = Color.Red;
-                changed = true;
-            }
+            if (!File.Exists(settingFilename)) SaveSettings();
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
-            if (settings.AccessorColor == Color.Empty)
-            {
-                settings.AccessorColor = Color.Red;
-                changed = true;
-            }
-            if (settings.VariableColor == Color.Empty)
-            {
-                settings.VariableColor = Color.Red;
-                changed = true;
-            }
-            if (settings.MemberFunctionColor == Color.Empty)
-            {
-                settings.MemberFunctionColor = Color.Red;
-                changed = true;
-            }
-            if (settings.LocalVariableColor == Color.Empty)
-            {
-                settings.LocalVariableColor = Color.Red;
-                changed = true;
-            }
-            if (changed) SaveSettings();
 		}
 
 		/// <summary>
@@ -294,8 +258,15 @@ namespace HighlightSelection
                     FlagType flags = prevResult.Member.Flags;
                     if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
                     else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
-                    else if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
-                    else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
+                    else if ((flags & FlagType.Static) == 0)
+                    {
+                        if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
+                        else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
+                    }
+                    else
+                    {
+                        if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
+                    }
                 }
             }
             int es = sci.EndStyled;
