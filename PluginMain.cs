@@ -187,31 +187,31 @@ namespace HighlightSelection
                 settings.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
                 settings.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
                 settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-                settings.AccessorsColor = Color.Red;
-                settings.VariablesColor = Color.Red;
-                settings.MemberFunctionsColor = Color.Red;
-                settings.LocalVariablesColor = Color.Red;
+                settings.AccessorColor = Color.Red;
+                settings.VariableColor = Color.Red;
+                settings.MemberFunctionColor = Color.Red;
+                settings.LocalVariableColor = Color.Red;
                 changed = true;
             }
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
-            if (settings.AccessorsColor == Color.Empty)
+            if (settings.AccessorColor == Color.Empty)
             {
-                settings.AccessorsColor = Color.Red;
+                settings.AccessorColor = Color.Red;
                 changed = true;
             }
-            if (settings.VariablesColor == Color.Empty)
+            if (settings.VariableColor == Color.Empty)
             {
-                settings.VariablesColor = Color.Red;
+                settings.VariableColor = Color.Red;
                 changed = true;
             }
-            if (settings.MemberFunctionsColor == Color.Empty)
+            if (settings.MemberFunctionColor == Color.Empty)
             {
-                settings.MemberFunctionsColor = Color.Red;
+                settings.MemberFunctionColor = Color.Red;
                 changed = true;
             }
-            if (settings.LocalVariablesColor == Color.Empty)
+            if (settings.LocalVariableColor == Color.Empty)
             {
-                settings.LocalVariablesColor = Color.Red;
+                settings.LocalVariableColor = Color.Red;
                 changed = true;
             }
             if (changed) SaveSettings();
@@ -285,17 +285,17 @@ namespace HighlightSelection
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int highlightStyle = (int)settings.HighlightStyle;
-            int highlightColor = DataConverter.ColorToInt32(settings.HighlightColor);
+            int style = (int)settings.HighlightStyle;
+            int color = DataConverter.ColorToInt32(settings.HighlightColor);
             if (settings.HighlightUnderCursorEnabled && prevResult != null)
             {
                 if (prevResult.Member != null)
                 {
                     FlagType flags = prevResult.Member.Flags;
-                    if ((flags & FlagType.ParameterVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.MemberFunctionsColor);
-                    else if ((flags & FlagType.LocalVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.LocalVariablesColor);
-                    else if ((flags & FlagType.Variable) > 0) highlightColor = DataConverter.ColorToInt32(settings.VariablesColor);
-                    else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) highlightColor = DataConverter.ColorToInt32(settings.AccessorsColor);
+                    if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
+                    else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
+                    else if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
+                    else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
                 }
             }
             int es = sci.EndStyled;
@@ -307,15 +307,15 @@ namespace HighlightSelection
                 int end = start + sci.MBSafeTextLength(match.Value);
                 int line = sci.LineFromPosition(start);
                 int position = start;
-                sci.SetIndicStyle(0, highlightStyle);
-                sci.SetIndicFore(0, highlightColor);
+                sci.SetIndicStyle(0, style);
+                sci.SetIndicFore(0, color);
                 sci.StartStyling(position, mask);
                 sci.SetStyling(end - start, mask);
                 sci.StartStyling(es, mask - 1);
                 if (addLineMarker)
                 {
                     sci.MarkerAdd(line, MARKER_NUMBER);
-                    sci.MarkerSetBack(MARKER_NUMBER, highlightColor);
+                    sci.MarkerSetBack(MARKER_NUMBER, color);
                 }
             }
             prevPos = sci.CurrentPos;
