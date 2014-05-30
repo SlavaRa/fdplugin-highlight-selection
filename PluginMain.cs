@@ -25,7 +25,7 @@ namespace HighlightSelection
 		private string pluginDesc = "A plugin to highlight your selected text";
 		private string pluginAuth = "mike.cann@gmail.com";
 		private string settingFilename;
-		private Settings settingObject;
+		private Settings settings;
         private Timer highlightUnderCursorTimer;
         private Timer tempo;
         private int prevPos;
@@ -89,7 +89,7 @@ namespace HighlightSelection
 		[Browsable(false)]
 		public Object Settings
 		{
-			get { return settingObject; }
+			get { return settings; }
 		}
 
 		#endregion
@@ -175,19 +175,20 @@ namespace HighlightSelection
 		/// </summary>
         private void LoadSettings()
 		{
-			settingObject = new Settings();
+			settings = new Settings();
             if (!File.Exists(settingFilename))
             {
-                settingObject.HighlightColor = System.Drawing.Color.Red;
-                settingObject.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
-                settingObject.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
-                settingObject.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
-                settingObject.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
-                settingObject.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
-                settingObject.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+                settings.HighlightColor = System.Drawing.Color.Red;
+                settings.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
+                settings.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
+                settings.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
+                settings.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
+                settings.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
+                settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+                settings.MemberFunctionsColor = System.Drawing.Color.Red;
                 SaveSettings();
             }
-            else settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
+            else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
 		}
 
 		/// <summary>
@@ -195,7 +196,7 @@ namespace HighlightSelection
 		/// </summary>
 		private void SaveSettings()
 		{
-			ObjectSerializer.Serialize(settingFilename, settingObject);
+			ObjectSerializer.Serialize(settingFilename, settings);
 		}
 
         /// <summary>
@@ -227,10 +228,10 @@ namespace HighlightSelection
         /// </summary>
         private void UpdateHighlightUnderCursorTimer()
         {
-            if (settingObject.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
-                settingObject.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-            highlightUnderCursorTimer.Interval = settingObject.HighlightUnderCursorUpdateInteval;
-            if (!settingObject.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
+            if (settings.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
+                settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+            highlightUnderCursorTimer.Interval = settings.HighlightUnderCursorUpdateInteval;
+            if (!settings.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
         }
 
         /// <summary>
@@ -258,11 +259,14 @@ namespace HighlightSelection
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int highlightStyle = (int)settingObject.HighlightStyle;
-            int highlightColor = DataConverter.ColorToInt32(settingObject.HighlightColor);
+            int highlightStyle = (int)settings.HighlightStyle;
+            int highlightColor;
+            if (settings.HighlightUnderCursorEnabled && prevResult != null && prevResult.Member != null && (prevResult.Member.Flags & FlagType.ParameterVar) > 0)
+                highlightColor = DataConverter.ColorToInt32(settings.MemberFunctionsColor);
+            else highlightColor = DataConverter.ColorToInt32(settings.HighlightColor);
             int es = sci.EndStyled;
             int mask = 1 << sci.StyleBits;
-            bool addLineMarker = settingObject.AddLineMarker;
+            bool addLineMarker = settings.AddLineMarker;
             foreach (SearchMatch match in matches)
             {
                 int start = sci.MBSafePosition(match.Index);
@@ -295,7 +299,7 @@ namespace HighlightSelection
                 sci.StartStyling(0, mask);
                 sci.SetStyling(sci.TextLength, 0);
                 sci.StartStyling(es, mask - 1);
-                if (settingObject.AddLineMarker) sci.MarkerDeleteAll(MARKER_NUMBER);
+                if (settings.AddLineMarker) sci.MarkerDeleteAll(MARKER_NUMBER);
             }
             prevPos = -1;
             prevToken = string.Empty;
@@ -309,8 +313,8 @@ namespace HighlightSelection
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
             FRSearch search = new FRSearch(text);
-            search.WholeWord = settingObject.WholeWords;
-            search.NoCase = !settingObject.MatchCase;
+            search.WholeWord = settings.WholeWords;
+            search.NoCase = !settings.MatchCase;
             search.Filter = SearchFilter.None;
             return search.Matches(sci.Text);
         }
@@ -326,7 +330,7 @@ namespace HighlightSelection
             int currentPos = Sci.CurrentPos;
             if (currentPos == prevPos) return;
             string newToken = Sci.GetWordFromPosition(currentPos);
-            if (settingObject.HighlightUnderCursorEnabled)
+            if (settings.HighlightUnderCursorEnabled)
             {
                 if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
                 if (prevResult != null)

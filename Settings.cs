@@ -53,5 +53,9 @@ namespace HighlightSelection
         [DisplayName("Update interval")]
         [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)]
         public int HighlightUnderCursorUpdateInteval { get; set; }
+
+        [Category("Highlight references to symbol under cursor")]
+        [DisplayName("Member functions color")]
+        public Color MemberFunctionsColor { get; set; }
 	}
 }
