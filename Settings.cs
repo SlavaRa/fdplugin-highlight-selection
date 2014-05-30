@@ -60,7 +60,12 @@ namespace HighlightSelection
         public Color ClassColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
-        [DisplayName("typeDef")]
+        [DisplayName("Enum")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color EnumColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Typedef")]
         [DefaultValue(typeof(Color), "Red")]
         public Color TypeDefColor { get; set; }
 

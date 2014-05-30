@@ -258,6 +258,7 @@ namespace HighlightSelection
                 {
                     flags = prevResult.Type.Flags;
                     if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
+                    else if ((flags & FlagType.Enum) > 0) color = DataConverter.ColorToInt32(settings.EnumColor);
                     else if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
                 }
                 else if (prevResult.Member != null)
