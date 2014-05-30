@@ -57,5 +57,9 @@ namespace HighlightSelection
         [Category("Highlight references to symbol under cursor")]
         [DisplayName("Member functions color")]
         public Color MemberFunctionsColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor")]
+        [DisplayName("Local variables color")]
+        public Color LocalVariablesColor { get; set; }
 	}
 }

@@ -14,6 +14,7 @@ using ASCompletion.Completion;
 using ASCompletion.Model;
 using ASCompletion.Context;
 using ScintillaNet.Enums;
+using System.Drawing;
 
 namespace HighlightSelection
 {
@@ -175,20 +176,33 @@ namespace HighlightSelection
 		/// </summary>
         private void LoadSettings()
 		{
+            bool changed = false;
 			settings = new Settings();
             if (!File.Exists(settingFilename))
             {
-                settings.HighlightColor = System.Drawing.Color.Red;
+                settings.HighlightColor = Color.Red;
                 settings.AddLineMarker = HighlightSelection.Settings.DEFAULT_ADD_LINE_MARKER;
                 settings.MatchCase = HighlightSelection.Settings.DEFAULT_MATCH_CASE;
                 settings.WholeWords = HighlightSelection.Settings.DEFAULT_WHOLE_WORD;
                 settings.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
                 settings.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
                 settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-                settings.MemberFunctionsColor = System.Drawing.Color.Red;
-                SaveSettings();
+                settings.MemberFunctionsColor = Color.Red;
+                settings.LocalVariablesColor = Color.Red;
+                changed = true;
             }
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
+            if (settings.MemberFunctionsColor == Color.Empty)
+            {
+                settings.MemberFunctionsColor = Color.Red;
+                changed = true;
+            }
+            if (settings.LocalVariablesColor == Color.Empty)
+            {
+                settings.LocalVariablesColor = Color.Red;
+                changed = true;
+            }
+            if (changed) SaveSettings();
 		}
 
 		/// <summary>
@@ -260,10 +274,16 @@ namespace HighlightSelection
         {
             if (matches == null) return;
             int highlightStyle = (int)settings.HighlightStyle;
-            int highlightColor;
-            if (settings.HighlightUnderCursorEnabled && prevResult != null && prevResult.Member != null && (prevResult.Member.Flags & FlagType.ParameterVar) > 0)
-                highlightColor = DataConverter.ColorToInt32(settings.MemberFunctionsColor);
-            else highlightColor = DataConverter.ColorToInt32(settings.HighlightColor);
+            int highlightColor = DataConverter.ColorToInt32(settings.HighlightColor);
+            if (settings.HighlightUnderCursorEnabled && prevResult != null)
+            {
+                if (prevResult.Member != null)
+                {
+                    FlagType flags = prevResult.Member.Flags;
+                    if ((flags & FlagType.ParameterVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.MemberFunctionsColor);
+                    else if ((flags & FlagType.LocalVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.LocalVariablesColor);
+                }
+            }
             int es = sci.EndStyled;
             int mask = 1 << sci.StyleBits;
             bool addLineMarker = settings.AddLineMarker;
