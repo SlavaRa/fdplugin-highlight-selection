@@ -427,10 +427,11 @@ namespace HighlightSelection
             MemberModel contextMember = null;
             int lineFrom = 0;
             int lineTo = sci.LineCount;
+            FlagType localVarMask = FlagType.LocalVar | FlagType.ParameterVar;
             bool isLocalVar = false;
             if (exprType.Member != null)
             {
-                if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0)
+                if ((exprType.Member.Flags & localVarMask) > 0)
                 {
                     contextMember = exprType.Context.ContextFunction;
                     lineFrom = contextMember.LineFrom;
@@ -442,15 +443,16 @@ namespace HighlightSelection
             foreach (SearchMatch m in matches)
             {
                 if (m.Line < lineFrom || m.Line > lineTo) continue;
-                exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(m.Index, true));
+                int pos = sci.MBSafePosition(m.Index);
+                exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(pos, true));
                 if (exprType != null)
                 {
                     MemberModel member = exprType.Member;
                     if (!isLocalVar)
                     {
-                        if (exprType.Type != null || (member != null && (member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) == 0)) newMatches.Add(m);
+                        if ((exprType.Type != null && member == null) || (member != null && (member.Flags & localVarMask) == 0)) newMatches.Add(m);
                     }
-                    else if (member != null && (member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) newMatches.Add(m);
+                    else if (member != null && (member.Flags & localVarMask) > 0) newMatches.Add(m);
                 }
             }
             return newMatches;
