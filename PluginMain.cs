@@ -187,12 +187,18 @@ namespace HighlightSelection
                 settings.HighlightStyle = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_STYLE;
                 settings.HighlightUnderCursorEnabled = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR;
                 settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+                settings.AccessorsColor = Color.Red;
                 settings.VariablesColor = Color.Red;
                 settings.MemberFunctionsColor = Color.Red;
                 settings.LocalVariablesColor = Color.Red;
                 changed = true;
             }
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
+            if (settings.AccessorsColor == Color.Empty)
+            {
+                settings.AccessorsColor = Color.Red;
+                changed = true;
+            }
             if (settings.VariablesColor == Color.Empty)
             {
                 settings.VariablesColor = Color.Red;
@@ -289,6 +295,7 @@ namespace HighlightSelection
                     if ((flags & FlagType.ParameterVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.MemberFunctionsColor);
                     else if ((flags & FlagType.LocalVar) > 0) highlightColor = DataConverter.ColorToInt32(settings.LocalVariablesColor);
                     else if ((flags & FlagType.Variable) > 0) highlightColor = DataConverter.ColorToInt32(settings.VariablesColor);
+                    else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) highlightColor = DataConverter.ColorToInt32(settings.AccessorsColor);
                 }
             }
             int es = sci.EndStyled;
