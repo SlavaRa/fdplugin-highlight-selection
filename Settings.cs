@@ -55,6 +55,10 @@ namespace HighlightSelection
         public int HighlightUnderCursorUpdateInteval { get; set; }
 
         [Category("Highlight references to symbol under cursor")]
+        [DisplayName("Variables color")]
+        public Color VariablesColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor")]
         [DisplayName("Member functions color")]
         public Color MemberFunctionsColor { get; set; }
 
