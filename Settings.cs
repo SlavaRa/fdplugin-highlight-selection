@@ -55,19 +55,19 @@ namespace HighlightSelection
         public int HighlightUnderCursorUpdateInteval { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
-        [DisplayName("Accessors")]
-        public Color AccessorsColor { get; set; }
+        [DisplayName("Accessor")]
+        public Color AccessorColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
-        [DisplayName("Variables")]
-        public Color VariablesColor { get; set; }
+        [DisplayName("Variable")]
+        public Color VariableColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
-        [DisplayName("Member functions")]
-        public Color MemberFunctionsColor { get; set; }
+        [DisplayName("Member function")]
+        public Color MemberFunctionColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
-        [DisplayName("Local variables")]
-        public Color LocalVariablesColor { get; set; }
+        [DisplayName("Local variable")]
+        public Color LocalVariableColor { get; set; }
 	}
 }
