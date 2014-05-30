@@ -341,31 +341,31 @@ namespace HighlightSelection
         private void onTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
-            ScintillaControl Sci = document.SciControl;
-            if (Sci == null) return;
-            int currentPos = Sci.CurrentPos;
+            ScintillaControl sci = document.SciControl;
+            if (sci == null) return;
+            int currentPos = sci.CurrentPos;
             if (currentPos == prevPos) return;
-            string newToken = Sci.GetWordFromPosition(currentPos);
+            string newToken = sci.GetWordFromPosition(currentPos);
             if (settings.HighlightUnderCursorEnabled)
             {
                 if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
                 if (prevResult != null)
                 {
-                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true)) : null;
+                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
                     if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
                     {
-                        RemoveHighlights(Sci);
+                        RemoveHighlights(sci);
                         highlightUnderCursorTimer.Start();
                     }
                 }
                 else
                 {
-                    RemoveHighlights(Sci);
+                    RemoveHighlights(sci);
                     highlightUnderCursorTimer.Start();
                 }
                 
             }
-            else if (newToken != prevToken) RemoveHighlights(Sci);
+            else if (newToken != prevToken) RemoveHighlights(sci);
             prevPos = currentPos;
         }
 
@@ -374,8 +374,8 @@ namespace HighlightSelection
         /// </summary>
         private void highlighUnderCursorTimerTick(object sender, EventArgs e)
         {
-            ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
-            if (Sci != null) UpdateHighlightUnderCursor(Sci);
+            ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            if (sci != null) UpdateHighlightUnderCursor(sci);
         }
 
         /// <summary>
