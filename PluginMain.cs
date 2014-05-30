@@ -264,7 +264,8 @@ namespace HighlightSelection
                 else if (prevResult.Member != null)
                 {
                     flags = prevResult.Member.Flags;
-                    if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
+                    if ((flags & FlagType.Constant) > 0) color = DataConverter.ColorToInt32(settings.ConstantColor);
+                    else if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
                     else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
                     else if ((flags & FlagType.Static) == 0)
                     {
