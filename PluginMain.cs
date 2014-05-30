@@ -266,6 +266,7 @@ namespace HighlightSelection
                     else
                     {
                         if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
+                        else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
                     }
                 }
             }
