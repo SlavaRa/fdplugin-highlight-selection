@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using ASCompletion.Completion;
 using ASCompletion.Model;
 using ASCompletion.Context;
+using ScintillaNet.Enums;
 
 namespace HighlightSelection
 {
@@ -30,6 +31,7 @@ namespace HighlightSelection
         private int prevPos;
         private ASResult prevResult;
         private string prevToken;
+        private readonly int MARKER_NUMBER = 0;
 
 		#region Required Properties
 
@@ -131,8 +133,10 @@ namespace HighlightSelection
                     RemoveHighlights(doc.SciControl);
 					if (doc.IsEditable)
 					{
-                        doc.SciControl.DoubleClick += onSciDoubleClick;
-						doc.SciControl.Modified += onSciModified;
+                        ScintillaControl sci = doc.SciControl;
+                        sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
+                        sci.DoubleClick += onSciDoubleClick;
+                        sci.Modified += onSciModified;
 					}
 				    break;
 				case EventType.FileSave:
@@ -153,7 +157,7 @@ namespace HighlightSelection
 		/// </summary>
         private void InitBasics()
 		{
-			string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
+            string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
 		}
@@ -251,32 +255,32 @@ namespace HighlightSelection
         /// <summary>
         /// Adds highlights to the correct sci control
         /// </summary>
-        private void AddHighlights(ScintillaControl Sci, List<SearchMatch> matches)
+        private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
             int highlightStyle = (int)settingObject.HighlightStyle;
             int highlightColor = DataConverter.ColorToInt32(settingObject.HighlightColor);
-            int es = Sci.EndStyled;
-            int mask = 1 << Sci.StyleBits;
+            int es = sci.EndStyled;
+            int mask = 1 << sci.StyleBits;
             bool addLineMarker = settingObject.AddLineMarker;
             foreach (SearchMatch match in matches)
             {
-                int start = Sci.MBSafePosition(match.Index);
-                int end = start + Sci.MBSafeTextLength(match.Value);
-                int line = Sci.LineFromPosition(start);
+                int start = sci.MBSafePosition(match.Index);
+                int end = start + sci.MBSafeTextLength(match.Value);
+                int line = sci.LineFromPosition(start);
                 int position = start;
-                Sci.SetIndicStyle(0, highlightStyle);
-                Sci.SetIndicFore(0, highlightColor);
-                Sci.StartStyling(position, mask);
-                Sci.SetStyling(end - start, mask);
-                Sci.StartStyling(es, mask - 1);
+                sci.SetIndicStyle(0, highlightStyle);
+                sci.SetIndicFore(0, highlightColor);
+                sci.StartStyling(position, mask);
+                sci.SetStyling(end - start, mask);
+                sci.StartStyling(es, mask - 1);
                 if (addLineMarker)
                 {
-                    Sci.MarkerAdd(line, 2);
-                    Sci.MarkerSetBack(2, highlightColor);
+                    sci.MarkerAdd(line, MARKER_NUMBER);
+                    sci.MarkerSetBack(MARKER_NUMBER, highlightColor);
                 }
             }
-            prevPos = Sci.CurrentPos;
+            prevPos = sci.CurrentPos;
         }
 
         /// <summary>
@@ -291,7 +295,7 @@ namespace HighlightSelection
                 sci.StartStyling(0, mask);
                 sci.SetStyling(sci.TextLength, 0);
                 sci.StartStyling(es, mask - 1);
-                if (settingObject.AddLineMarker) sci.MarkerDeleteAll(2);
+                if (settingObject.AddLineMarker) sci.MarkerDeleteAll(MARKER_NUMBER);
             }
             prevPos = -1;
             prevToken = string.Empty;
@@ -301,14 +305,14 @@ namespace HighlightSelection
         /// <summary>
         /// Gets search results for a sci control
         /// </summary>
-        private List<SearchMatch> GetResults(ScintillaControl Sci, string text)
+        private List<SearchMatch> GetResults(ScintillaControl sci, string text)
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
             FRSearch search = new FRSearch(text);
             search.WholeWord = settingObject.WholeWords;
             search.NoCase = !settingObject.MatchCase;
             search.Filter = SearchFilter.None;
-            return search.Matches(Sci.Text);
+            return search.Matches(sci.Text);
         }
 
         /// <summary>
@@ -316,22 +320,18 @@ namespace HighlightSelection
         /// </summary>
         private void onTempoTick(object sender, EventArgs e)
         {
-            ScintillaControl Sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
+            ScintillaControl Sci = document.SciControl;
             if (Sci == null) return;
             int currentPos = Sci.CurrentPos;
             if (currentPos == prevPos) return;
             string newToken = Sci.GetWordFromPosition(currentPos);
-            if (!settingObject.HighlightUnderCursorEnabled)
-            {
-                if (newToken != prevToken) RemoveHighlights(Sci);
-            }
-            else
+            if (settingObject.HighlightUnderCursorEnabled)
             {
                 if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
                 if (prevResult != null)
                 {
-                    ASResult result = null;
-                    if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
+                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true)) : null;
                     if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
                     {
                         RemoveHighlights(Sci);
@@ -343,7 +343,9 @@ namespace HighlightSelection
                     RemoveHighlights(Sci);
                     highlightUnderCursorTimer.Start();
                 }
+                
             }
+            else if (newToken != prevToken) RemoveHighlights(Sci);
             prevPos = currentPos;
         }
 
@@ -359,33 +361,31 @@ namespace HighlightSelection
         /// <summary>
         /// 
         /// </summary>
-        private void UpdateHighlightUnderCursor(ScintillaControl Sci)
+        private void UpdateHighlightUnderCursor(ScintillaControl sci)
         {
-            if (!IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) return;
-            int currentPos = Sci.CurrentPos;
-            string newToken = Sci.GetWordFromPosition(currentPos);
+            string file = PluginBase.MainForm.CurrentDocument.FileName;
+            if (!IsValidFile(file)) return;
+            int currentPos = sci.CurrentPos;
+            string newToken = sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
-            if (string.IsNullOrEmpty(newToken))
+            if (!string.IsNullOrEmpty(newToken))
             {
-                RemoveHighlights(Sci);
-                return;
+                if (prevResult == null && prevToken == newToken) return;
+                ASResult result = IsValidFile(file) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
+                if (result != null && !result.IsNull())
+                {
+                    if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)) return;
+                    RemoveHighlights(sci);
+                    prevToken = newToken;
+                    prevResult = result;
+                    List<SearchMatch> matches = FilterResults(GetResults(sci, prevToken), result, sci);
+                    if (matches == null) return;
+                    highlightUnderCursorTimer.Stop();
+                    AddHighlights(sci, matches);
+                }
+                else RemoveHighlights(sci);
             }
-            if (prevResult == null && prevToken == newToken) return;
-            ASResult result = null;
-            if (IsValidFile(PluginBase.MainForm.CurrentDocument.FileName)) result = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(currentPos, true));
-            if (result == null || result.IsNull())
-            {
-                RemoveHighlights(Sci);
-                return;
-            }
-            if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)) return;
-            RemoveHighlights(Sci);
-            prevToken = newToken;
-            prevResult = result;
-            List<SearchMatch> matches = FilterResults(GetResults(Sci, prevToken), result, Sci);
-            if (matches == null) return;
-            highlightUnderCursorTimer.Stop();
-            AddHighlights(Sci, matches);
+            else RemoveHighlights(sci);
         }
 
         /// <summary>
@@ -393,9 +393,9 @@ namespace HighlightSelection
         /// </summary>
         /// <param name="matches"></param>
         /// <param name="exprType"></param>
-        /// <param name="Sci"></param>
+        /// <param name="sci"></param>
         /// <returns></returns>
-        private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl Sci)
+        private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
         {
             if (matches == null) return null;
             MemberModel contextMember = null;
@@ -416,7 +416,7 @@ namespace HighlightSelection
             foreach (SearchMatch m in matches)
             {
                 if (isLocalVar && (m.Line < lineFrom || m.Line > lineTo)) continue;
-                exprType = ASComplete.GetExpressionType(Sci, Sci.WordEndPosition(m.Index, true));
+                exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(m.Index, true));
                 if (exprType != null && exprType.Member != null)
                 {
                     if (!isLocalVar)
