@@ -422,7 +422,7 @@ namespace HighlightSelection
         /// <returns></returns>
         private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
         {
-            if (matches == null) return null;
+            if (matches == null || matches.Count == 0) return null;
             MemberModel contextMember = null;
             bool isLocalVar = false;
             if (exprType.Member != null)
@@ -432,12 +432,16 @@ namespace HighlightSelection
                     contextMember = exprType.Context.ContextFunction;
                     isLocalVar = true;
                 }
-                else contextMember = ASContext.Context.CurrentClass;
             }
-            if (contextMember == null) return matches;
             List<SearchMatch> newMatches = new List<SearchMatch>();
-            int lineFrom = contextMember.LineFrom;
-            int lineTo = contextMember.LineTo;
+            int lineFrom = 0;
+            int lineTo;
+            if (contextMember != null)
+            {
+                lineFrom = contextMember.LineFrom;
+                lineTo = contextMember.LineTo;
+            }
+            else lineTo = sci.LineCount;
             foreach (SearchMatch m in matches)
             {
                 if (isLocalVar && (m.Line < lineFrom || m.Line > lineTo)) continue;
