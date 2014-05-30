@@ -56,18 +56,27 @@ namespace HighlightSelection
 
         [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Accessor")]
+        [DefaultValue(typeof(Color), "Red")]
         public Color AccessorColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Static variable")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color StaticVariableColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Variable")]
+        [DefaultValue(typeof(Color), "Red")]
         public Color VariableColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Member function")]
+        [DefaultValue(typeof(Color), "Red")]
         public Color MemberFunctionColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Local variable")]
+        [DefaultValue(typeof(Color), "Red")]
         public Color LocalVariableColor { get; set; }
 	}
 }
