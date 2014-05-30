@@ -262,11 +262,13 @@ namespace HighlightSelection
                     {
                         if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
                         else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
+                        else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.MethodColor);
                     }
                     else
                     {
                         if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
                         else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
+                        else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.StaticMethodColor);
                     }
                 }
             }
