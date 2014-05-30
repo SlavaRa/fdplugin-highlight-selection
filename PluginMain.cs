@@ -260,7 +260,8 @@ namespace HighlightSelection
                     if (prevResult.Type != null && prevResult.Member == null)
                     {
                         flags = prevResult.Type.Flags;
-                        if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
+                        if ((flags & FlagType.Abstract) > 0) color = DataConverter.ColorToInt32(settings.AbstractColor);
+                        else if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
                         else if ((flags & FlagType.Enum) > 0) color = DataConverter.ColorToInt32(settings.EnumColor);
                         else if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
                     }
@@ -404,7 +405,7 @@ namespace HighlightSelection
                     prevToken = newToken;
                     prevResult = result;
                     List<SearchMatch> matches = FilterResults(GetResults(sci, prevToken), result, sci);
-                    if (matches == null) return;
+                    if (matches == null || matches.Count == 0) return;
                     highlightUnderCursorTimer.Stop();
                     AddHighlights(sci, matches);
                 }
@@ -424,35 +425,32 @@ namespace HighlightSelection
         {
             if (matches == null || matches.Count == 0) return null;
             MemberModel contextMember = null;
+            int lineFrom = 0;
+            int lineTo = sci.LineCount;
             bool isLocalVar = false;
             if (exprType.Member != null)
             {
                 if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0)
                 {
                     contextMember = exprType.Context.ContextFunction;
+                    lineFrom = contextMember.LineFrom;
+                    lineTo = contextMember.LineTo;
                     isLocalVar = true;
                 }
             }
             List<SearchMatch> newMatches = new List<SearchMatch>();
-            int lineFrom = 0;
-            int lineTo;
-            if (contextMember != null)
-            {
-                lineFrom = contextMember.LineFrom;
-                lineTo = contextMember.LineTo;
-            }
-            else lineTo = sci.LineCount;
             foreach (SearchMatch m in matches)
             {
-                if (isLocalVar && (m.Line < lineFrom || m.Line > lineTo)) continue;
+                if (m.Line < lineFrom || m.Line > lineTo) continue;
                 exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(m.Index, true));
-                if (exprType != null && exprType.Member != null)
+                if (exprType != null)
                 {
+                    MemberModel member = exprType.Member;
                     if (!isLocalVar)
                     {
-                        if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) == 0) newMatches.Add(m);
+                        if (exprType.Type != null || (member != null && (member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) == 0)) newMatches.Add(m);
                     }
-                    else if ((exprType.Member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) newMatches.Add(m);
+                    else if (member != null && (member.Flags & (FlagType.LocalVar | FlagType.ParameterVar)) > 0) newMatches.Add(m);
                 }
             }
             return newMatches;
