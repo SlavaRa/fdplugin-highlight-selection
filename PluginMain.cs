@@ -253,31 +253,35 @@ namespace HighlightSelection
             int color = DataConverter.ColorToInt32(settings.HighlightColor);
             if (settings.HighlightUnderCursorEnabled && prevResult != null)
             {
-                FlagType flags;
-                if (prevResult.Type != null && prevResult.Member == null)
+                if (prevResult.IsPackage) color = DataConverter.ColorToInt32(settings.PackageColor);
+                else 
                 {
-                    flags = prevResult.Type.Flags;
-                    if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
-                    else if ((flags & FlagType.Enum) > 0) color = DataConverter.ColorToInt32(settings.EnumColor);
-                    else if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
-                }
-                else if (prevResult.Member != null)
-                {
-                    flags = prevResult.Member.Flags;
-                    if ((flags & FlagType.Constant) > 0) color = DataConverter.ColorToInt32(settings.ConstantColor);
-                    else if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
-                    else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
-                    else if ((flags & FlagType.Static) == 0)
+                    FlagType flags;
+                    if (prevResult.Type != null && prevResult.Member == null)
                     {
-                        if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
-                        else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
-                        else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.MethodColor);
+                        flags = prevResult.Type.Flags;
+                        if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
+                        else if ((flags & FlagType.Enum) > 0) color = DataConverter.ColorToInt32(settings.EnumColor);
+                        else if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
                     }
-                    else
+                    else if (prevResult.Member != null)
                     {
-                        if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
-                        else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
-                        else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.StaticMethodColor);
+                        flags = prevResult.Member.Flags;
+                        if ((flags & FlagType.Constant) > 0) color = DataConverter.ColorToInt32(settings.ConstantColor);
+                        else if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
+                        else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
+                        else if ((flags & FlagType.Static) == 0)
+                        {
+                            if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
+                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
+                            else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.MethodColor);
+                        }
+                        else
+                        {
+                            if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
+                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
+                            else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.StaticMethodColor);
+                        }
                     }
                 }
             }
