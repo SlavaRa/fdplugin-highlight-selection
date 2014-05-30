@@ -70,6 +70,11 @@ namespace HighlightSelection
         public Color TypeDefColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Constant")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color ConstantColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Static accessor")]
         [DefaultValue(typeof(Color), "Red")]
         public Color StaticAccessorColor { get; set; }
