@@ -254,7 +254,7 @@ namespace HighlightSelection
             if (settings.HighlightUnderCursorEnabled && prevResult != null)
             {
                 if (prevResult.IsPackage) color = DataConverter.ColorToInt32(settings.PackageColor);
-                else 
+                else
                 {
                     FlagType flags;
                     if (prevResult.Type != null && prevResult.Member == null)
