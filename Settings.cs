@@ -55,6 +55,11 @@ namespace HighlightSelection
         public int HighlightUnderCursorUpdateInteval { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Class")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color ClassColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Static accessor")]
         [DefaultValue(typeof(Color), "Red")]
         public Color StaticAccessorColor { get; set; }

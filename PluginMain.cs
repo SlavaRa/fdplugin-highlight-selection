@@ -253,9 +253,10 @@ namespace HighlightSelection
             int color = DataConverter.ColorToInt32(settings.HighlightColor);
             if (settings.HighlightUnderCursorEnabled && prevResult != null)
             {
+                FlagType flags;
                 if (prevResult.Member != null)
                 {
-                    FlagType flags = prevResult.Member.Flags;
+                    flags = prevResult.Member.Flags;
                     if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
                     else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
                     else if ((flags & FlagType.Static) == 0)
@@ -270,6 +271,11 @@ namespace HighlightSelection
                         else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
                         else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.StaticMethodColor);
                     }
+                }
+                else if (prevResult.Type != null)
+                {
+                    flags = prevResult.Type.Flags;
+                    if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
                 }
             }
             int es = sci.EndStyled;
