@@ -158,7 +158,7 @@ namespace HighlightSelection
 		/// </summary>
         private void InitBasics()
 		{
-            string dataPath = Path.Combine(PathHelper.DataDir, "HighlightSelection");
+            string dataPath = Path.Combine(PathHelper.DataDir, pluginName);
 			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 			settingFilename = Path.Combine(dataPath, "Settings.fdb");
 		}
