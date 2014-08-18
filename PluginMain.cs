@@ -191,12 +191,14 @@ namespace HighlightSelection
             flagsToColor[FlagType.LocalVar] = DataConverter.ColorToInt32(settings.LocalVariableColor);
             flagsToColor[FlagType.Constant] = DataConverter.ColorToInt32(settings.ConstantColor);
             flagsToColor[FlagType.Variable] = DataConverter.ColorToInt32(settings.VariableColor);
-            flagsToColor[FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.AccessorColor);
+            flagsToColor[FlagType.Setter] = DataConverter.ColorToInt32(settings.AccessorColor);
+            flagsToColor[FlagType.Getter] = DataConverter.ColorToInt32(settings.AccessorColor);
             flagsToColor[FlagType.Function] = DataConverter.ColorToInt32(settings.MethodColor);
-            flagsToColor[FlagType.Static | FlagType.Constant] = DataConverter.ColorToInt32(settings.StaticConstantColor);
-            flagsToColor[FlagType.Static | FlagType.Variable] = DataConverter.ColorToInt32(settings.StaticVariableColor);
-            flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
-            flagsToColor[FlagType.Static | FlagType.Function] = DataConverter.ColorToInt32(settings.StaticMethodColor);
+            flagsToColor[FlagType.Static & FlagType.Constant] = DataConverter.ColorToInt32(settings.StaticConstantColor);
+            flagsToColor[FlagType.Static & FlagType.Variable] = DataConverter.ColorToInt32(settings.StaticVariableColor);
+            flagsToColor[FlagType.Static & FlagType.Setter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
+            flagsToColor[FlagType.Static & FlagType.Getter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
+            flagsToColor[FlagType.Static & FlagType.Function] = DataConverter.ColorToInt32(settings.StaticMethodColor);
         }
 
         private bool IsValidFile(string file)
@@ -231,43 +233,9 @@ namespace HighlightSelection
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int color = DataConverter.ColorToInt32(settings.HighlightColor);
-            if (settings.HighlightUnderCursorEnabled && prevResult != null)
-            {
-                if (prevResult.IsPackage) color = DataConverter.ColorToInt32(settings.PackageColor);
-                else
-                {
-                    FlagType flags;
-                    if (prevResult.Type != null && prevResult.Member == null)
-                    {
-                        flags = prevResult.Type.Flags;
-                        if ((flags & FlagType.Abstract) > 0) color = flagsToColor[FlagType.Abstract];
-                        else if ((flags & FlagType.TypeDef) > 0) color = flagsToColor[FlagType.TypeDef];
-                        else if ((flags & FlagType.Enum) > 0) color = flagsToColor[FlagType.Enum];
-                        else if ((flags & FlagType.Class) > 0) color = flagsToColor[FlagType.Class];
-                    }
-                    else if (prevResult.Member != null)
-                    {
-                        flags = prevResult.Member.Flags;
-                        if ((flags & FlagType.ParameterVar) > 0) color = flagsToColor[FlagType.ParameterVar];
-                        else if ((flags & FlagType.LocalVar) > 0) color = flagsToColor[FlagType.LocalVar];
-                        else if ((flags & FlagType.Static) == 0)
-                        {
-                            if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Constant];
-                            else if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Variable];
-                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Setter | FlagType.Getter];
-                            else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Function];
-                        }
-                        else
-                        {
-                            if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Static | FlagType.Constant];
-                            else if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Static | FlagType.Variable];
-                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter];
-                            else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Static | FlagType.Function];
-                        }
-                    }
-                }
-            }
+            int color;
+            if (settings.HighlightUnderCursorEnabled && prevResult != null) color = GetHighlightColor();
+            else color = DataConverter.ColorToInt32(settings.HighlightColor);
             int style = (int)settings.HighlightStyle;
             int mask = 1 << sci.StyleBits;
             int es = sci.EndStyled;
@@ -289,6 +257,38 @@ namespace HighlightSelection
                 }
             }
             prevPos = sci.CurrentPos;
+        }
+
+        private int GetHighlightColor()
+        {
+            if (settings.HighlightUnderCursorEnabled && prevResult != null && !prevResult.IsNull())
+            {
+                if (prevResult.IsPackage) return DataConverter.ColorToInt32(settings.PackageColor);
+                FlagType flags = prevResult.Type != null && prevResult.Member == null ? prevResult.Type.Flags : prevResult.Member.Flags;
+                if ((flags & FlagType.Abstract) > 0) return flagsToColor[FlagType.Abstract];
+                if ((flags & FlagType.TypeDef) > 0) return flagsToColor[FlagType.TypeDef];
+                if ((flags & FlagType.Enum) > 0) return flagsToColor[FlagType.Enum];
+                if ((flags & FlagType.Class) > 0) return flagsToColor[FlagType.Class];
+                if ((flags & FlagType.ParameterVar) > 0) return flagsToColor[FlagType.ParameterVar];
+                if ((flags & FlagType.LocalVar) > 0) return flagsToColor[FlagType.LocalVar];
+                if ((flags & FlagType.Static) == 0)
+                {
+                    if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Constant];
+                    if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Variable];
+                    if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Setter];
+                    if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Getter];
+                    if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Function];
+                }
+                else
+                {
+                    if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Static & FlagType.Constant];
+                    if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Static & FlagType.Variable];
+                    if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Static & FlagType.Setter];
+                    if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Static & FlagType.Getter];
+                    if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Static & FlagType.Function];
+                }
+            }
+            return DataConverter.ColorToInt32(settings.HighlightColor);
         }
 
         private void RemoveHighlights(ScintillaControl sci)
@@ -361,11 +361,13 @@ namespace HighlightSelection
             int currentPos = sci.CurrentPos;
             string newToken = sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
-            if (!string.IsNullOrEmpty(newToken))
+            if (string.IsNullOrEmpty(newToken)) RemoveHighlights(sci);
+            else 
             {
                 if (prevResult == null && prevToken == newToken) return;
                 ASResult result = IsValidFile(file) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
-                if (result != null && !result.IsNull())
+                if (result == null || result.IsNull()) RemoveHighlights(sci);
+                else 
                 {
                     if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)) return;
                     RemoveHighlights(sci);
@@ -376,9 +378,7 @@ namespace HighlightSelection
                     highlightUnderCursorTimer.Stop();
                     AddHighlights(sci, matches);
                 }
-                else RemoveHighlights(sci);
             }
-            else RemoveHighlights(sci);
         }
 
         private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
