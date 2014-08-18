@@ -153,27 +153,18 @@ namespace HighlightSelection
 
 		#region Custom Methods
 
-		/// <summary>
-		/// Initializes important variables
-		/// </summary>
         private void InitBasics()
 		{
-            string dataPath = Path.Combine(PathHelper.DataDir, pluginName);
-			if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
-			settingFilename = Path.Combine(dataPath, "Settings.fdb");
+            string path = Path.Combine(PathHelper.DataDir, pluginName);
+			if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+			settingFilename = Path.Combine(path, "Settings.fdb");
 		}
 
-		/// <summary>
-		/// Adds the required event handlers
-		/// </summary> 
         private void AddEventHandlers()
 		{
 			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
 		}
 
-		/// <summary>
-		/// Loads the plugin settings
-		/// </summary>
         private void LoadSettings()
 		{
 			settings = new Settings();
@@ -181,17 +172,11 @@ namespace HighlightSelection
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
 		}
 
-		/// <summary>
-		/// Saves the plugin settings
-		/// </summary>
 		private void SaveSettings()
 		{
 			ObjectSerializer.Serialize(settingFilename, settings);
 		}
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void InitTimers()
         {
             highlightUnderCursorTimer = new Timer();
@@ -202,9 +187,6 @@ namespace HighlightSelection
             tempo.Start();
         }
 
-        /// <summary>
-        /// Checks if the file is ok for refactoring
-        /// </summary>
         private bool IsValidFile(string file)
         {
             IProject project = PluginBase.CurrentProject;
@@ -213,9 +195,6 @@ namespace HighlightSelection
             return (ext == ".as" || ext == ".hx" || ext == ".ls") && PluginBase.CurrentProject.DefaultSearchFilter.Contains(ext);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void UpdateHighlightUnderCursorTimer()
         {
             if (settings.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
@@ -224,9 +203,6 @@ namespace HighlightSelection
             if (!settings.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
         }
 
-        /// <summary>
-        /// DoubleClick handler
-        /// </summary>
         private void onSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
@@ -235,17 +211,11 @@ namespace HighlightSelection
             AddHighlights(sender, GetResults(sender, prevToken));
         }
 
-        /// <summary>
-        /// Modified Handler
-        /// </summary>
         private void onSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
             RemoveHighlights(sender);
         }
 
-        /// <summary>
-        /// Adds highlights to the correct sci control
-        /// </summary>
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
@@ -309,9 +279,6 @@ namespace HighlightSelection
             prevPos = sci.CurrentPos;
         }
 
-        /// <summary>
-        /// Removes the highlights from the correct sci control
-        /// </summary>
         private void RemoveHighlights(ScintillaControl sci)
         {
             if (sci != null)
@@ -328,9 +295,6 @@ namespace HighlightSelection
             prevResult = null;
         }
 
-        /// <summary>
-        /// Gets search results for a sci control
-        /// </summary>
         private List<SearchMatch> GetResults(ScintillaControl sci, string text)
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
@@ -341,9 +305,6 @@ namespace HighlightSelection
             return search.Matches(sci.Text);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void onTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
@@ -375,18 +336,12 @@ namespace HighlightSelection
             prevPos = currentPos;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void highlighUnderCursorTimerTick(object sender, EventArgs e)
         {
             ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
             if (sci != null) UpdateHighlightUnderCursor(sci);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void UpdateHighlightUnderCursor(ScintillaControl sci)
         {
             string file = PluginBase.MainForm.CurrentDocument.FileName;
@@ -414,13 +369,6 @@ namespace HighlightSelection
             else RemoveHighlights(sci);
         }
 
-        /// <summary>
-        /// TODO slavara: IMPLEMENT ME
-        /// </summary>
-        /// <param name="matches"></param>
-        /// <param name="exprType"></param>
-        /// <param name="sci"></param>
-        /// <returns></returns>
         private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
         {
             if (matches == null || matches.Count == 0) return null;
