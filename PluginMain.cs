@@ -219,7 +219,6 @@ namespace HighlightSelection
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int style = (int)settings.HighlightStyle;
             int color = DataConverter.ColorToInt32(settings.HighlightColor);
             if (settings.HighlightUnderCursorEnabled && prevResult != null)
             {
@@ -256,22 +255,22 @@ namespace HighlightSelection
                     }
                 }
             }
-            int es = sci.EndStyled;
+            int style = (int)settings.HighlightStyle;
             int mask = 1 << sci.StyleBits;
+            int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
             foreach (SearchMatch match in matches)
             {
                 int start = sci.MBSafePosition(match.Index);
                 int end = start + sci.MBSafeTextLength(match.Value);
-                int line = sci.LineFromPosition(start);
-                int position = start;
                 sci.SetIndicStyle(0, style);
                 sci.SetIndicFore(0, color);
-                sci.StartStyling(position, mask);
+                sci.StartStyling(start, mask);
                 sci.SetStyling(end - start, mask);
                 sci.StartStyling(es, mask - 1);
                 if (addLineMarker)
                 {
+                    int line = sci.LineFromPosition(start);
                     sci.MarkerAdd(line, MARKER_NUMBER);
                     sci.MarkerSetBack(MARKER_NUMBER, color);
                 }
