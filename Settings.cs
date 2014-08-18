@@ -14,7 +14,7 @@ namespace HighlightSelection
         public const bool DEFAULT_HIGHLIGHT_UNDER_CURSOR = false;
         public const int DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL = 100;
         public const IndicatorStyle DEFAULT_HIGHLIGHT_STYLE = IndicatorStyle.Box;
-
+        
         [Category("General")]
         [DisplayName("Highlight Color")]
         [Description("The color to highlight the selected text.")]
@@ -78,6 +78,11 @@ namespace HighlightSelection
         [DisplayName("Abstract")]
         [DefaultValue(typeof(Color), "Red")]
         public Color AbstractColor { get; set; }
+
+        [Category("Highlight references to symbol under cursor. Colors")]
+        [DisplayName("Static constant")]
+        [DefaultValue(typeof(Color), "Red")]
+        public Color StaticConstantColor { get; set; }
 
         [Category("Highlight references to symbol under cursor. Colors")]
         [DisplayName("Constant")]
