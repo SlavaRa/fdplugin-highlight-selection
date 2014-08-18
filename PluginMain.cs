@@ -33,6 +33,7 @@ namespace HighlightSelection
         private ASResult prevResult;
         private string prevToken;
         private readonly int MARKER_NUMBER = 0;
+        private Dictionary<FlagType, int> flagsToColor;
 
 		#region Required Properties
 
@@ -97,21 +98,16 @@ namespace HighlightSelection
 
 		#region Required Methods
 
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
 		public void Initialize()
 		{
 	        InitBasics();
 			LoadSettings();
 			AddEventHandlers();
             InitTimers();
+            InitFlagsToColor();
             UpdateHighlightUnderCursorTimer();
 		}
 
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
 		public void Dispose()
 		{
             highlightUnderCursorTimer.Dispose();
@@ -121,15 +117,11 @@ namespace HighlightSelection
 		    SaveSettings();
 		}
 
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
 		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
 		{
             ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
 			switch (e.Type)
 			{
-				// Catches FileSwitch event and displays the filename it in the PluginUI.
 				case EventType.FileSwitch:
                     RemoveHighlights(doc.SciControl);
 					if (doc.IsEditable)
@@ -144,6 +136,7 @@ namespace HighlightSelection
                     RemoveHighlights(doc.SciControl);
                     break;
                 case EventType.SettingChanged:
+                    InitFlagsToColor();
                     UpdateHighlightUnderCursorTimer();
 				    break;
 			}
@@ -185,6 +178,24 @@ namespace HighlightSelection
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Tick += onTempoTick;
             tempo.Start();
+        }
+
+        private void InitFlagsToColor()
+        {
+            flagsToColor = new Dictionary<FlagType, int>();
+            flagsToColor[FlagType.Abstract] = DataConverter.ColorToInt32(settings.AbstractColor);
+            flagsToColor[FlagType.TypeDef] = DataConverter.ColorToInt32(settings.TypeDefColor);
+            flagsToColor[FlagType.Enum] = DataConverter.ColorToInt32(settings.EnumColor);
+            flagsToColor[FlagType.Class] = DataConverter.ColorToInt32(settings.ClassColor);
+            flagsToColor[FlagType.Constant] = DataConverter.ColorToInt32(settings.ConstantColor);
+            flagsToColor[FlagType.ParameterVar] = DataConverter.ColorToInt32(settings.MemberFunctionColor);
+            flagsToColor[FlagType.LocalVar] = DataConverter.ColorToInt32(settings.LocalVariableColor);
+            flagsToColor[FlagType.Variable] = DataConverter.ColorToInt32(settings.VariableColor);
+            flagsToColor[FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.AccessorColor);
+            flagsToColor[FlagType.Function] = DataConverter.ColorToInt32(settings.MethodColor);
+            flagsToColor[FlagType.Static | FlagType.Variable] = DataConverter.ColorToInt32(settings.StaticVariableColor);
+            flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
+            flagsToColor[FlagType.Static | FlagType.Function] = DataConverter.ColorToInt32(settings.StaticMethodColor);
         }
 
         private bool IsValidFile(string file)
@@ -229,28 +240,28 @@ namespace HighlightSelection
                     if (prevResult.Type != null && prevResult.Member == null)
                     {
                         flags = prevResult.Type.Flags;
-                        if ((flags & FlagType.Abstract) > 0) color = DataConverter.ColorToInt32(settings.AbstractColor);
-                        else if ((flags & FlagType.TypeDef) > 0) color = DataConverter.ColorToInt32(settings.TypeDefColor);
-                        else if ((flags & FlagType.Enum) > 0) color = DataConverter.ColorToInt32(settings.EnumColor);
-                        else if ((flags & FlagType.Class) > 0) color = DataConverter.ColorToInt32(settings.ClassColor);
+                        if ((flags & FlagType.Abstract) > 0) color = flagsToColor[FlagType.Abstract];
+                        else if ((flags & FlagType.TypeDef) > 0) color = flagsToColor[FlagType.TypeDef];
+                        else if ((flags & FlagType.Enum) > 0) color = flagsToColor[FlagType.Enum];
+                        else if ((flags & FlagType.Class) > 0) color = flagsToColor[FlagType.Class];
                     }
                     else if (prevResult.Member != null)
                     {
                         flags = prevResult.Member.Flags;
-                        if ((flags & FlagType.Constant) > 0) color = DataConverter.ColorToInt32(settings.ConstantColor);
-                        else if ((flags & FlagType.ParameterVar) > 0) color = DataConverter.ColorToInt32(settings.MemberFunctionColor);
-                        else if ((flags & FlagType.LocalVar) > 0) color = DataConverter.ColorToInt32(settings.LocalVariableColor);
+                        if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Constant];
+                        else if ((flags & FlagType.ParameterVar) > 0) color = flagsToColor[FlagType.ParameterVar];
+                        else if ((flags & FlagType.LocalVar) > 0) color = flagsToColor[FlagType.LocalVar];
                         else if ((flags & FlagType.Static) == 0)
                         {
-                            if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.VariableColor);
-                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.AccessorColor);
-                            else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.MethodColor);
+                            if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Variable];
+                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Setter | FlagType.Getter];
+                            else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Function];
                         }
                         else
                         {
-                            if ((flags & FlagType.Variable) > 0) color = DataConverter.ColorToInt32(settings.StaticVariableColor);
-                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = DataConverter.ColorToInt32(settings.StaticAccessorColor);
-                            else if ((flags & FlagType.Function) > 0) color = DataConverter.ColorToInt32(settings.StaticMethodColor);
+                            if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Static | FlagType.Variable];
+                            else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter];
+                            else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Static | FlagType.Function];
                         }
                     }
                 }
