@@ -187,12 +187,13 @@ namespace HighlightSelection
             flagsToColor[FlagType.TypeDef] = DataConverter.ColorToInt32(settings.TypeDefColor);
             flagsToColor[FlagType.Enum] = DataConverter.ColorToInt32(settings.EnumColor);
             flagsToColor[FlagType.Class] = DataConverter.ColorToInt32(settings.ClassColor);
-            flagsToColor[FlagType.Constant] = DataConverter.ColorToInt32(settings.ConstantColor);
             flagsToColor[FlagType.ParameterVar] = DataConverter.ColorToInt32(settings.MemberFunctionColor);
             flagsToColor[FlagType.LocalVar] = DataConverter.ColorToInt32(settings.LocalVariableColor);
+            flagsToColor[FlagType.Constant] = DataConverter.ColorToInt32(settings.ConstantColor);
             flagsToColor[FlagType.Variable] = DataConverter.ColorToInt32(settings.VariableColor);
             flagsToColor[FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.AccessorColor);
             flagsToColor[FlagType.Function] = DataConverter.ColorToInt32(settings.MethodColor);
+            flagsToColor[FlagType.Static | FlagType.Constant] = DataConverter.ColorToInt32(settings.StaticConstantColor);
             flagsToColor[FlagType.Static | FlagType.Variable] = DataConverter.ColorToInt32(settings.StaticVariableColor);
             flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
             flagsToColor[FlagType.Static | FlagType.Function] = DataConverter.ColorToInt32(settings.StaticMethodColor);
@@ -248,18 +249,19 @@ namespace HighlightSelection
                     else if (prevResult.Member != null)
                     {
                         flags = prevResult.Member.Flags;
-                        if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Constant];
-                        else if ((flags & FlagType.ParameterVar) > 0) color = flagsToColor[FlagType.ParameterVar];
+                        if ((flags & FlagType.ParameterVar) > 0) color = flagsToColor[FlagType.ParameterVar];
                         else if ((flags & FlagType.LocalVar) > 0) color = flagsToColor[FlagType.LocalVar];
                         else if ((flags & FlagType.Static) == 0)
                         {
-                            if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Variable];
+                            if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Constant];
+                            else if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Variable];
                             else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Setter | FlagType.Getter];
                             else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Function];
                         }
                         else
                         {
-                            if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Static | FlagType.Variable];
+                            if ((flags & FlagType.Constant) > 0) color = flagsToColor[FlagType.Static | FlagType.Constant];
+                            else if ((flags & FlagType.Variable) > 0) color = flagsToColor[FlagType.Static | FlagType.Variable];
                             else if ((flags & (FlagType.Setter | FlagType.Getter)) > 0) color = flagsToColor[FlagType.Static | FlagType.Setter | FlagType.Getter];
                             else if ((flags & FlagType.Function) > 0) color = flagsToColor[FlagType.Static | FlagType.Function];
                         }
