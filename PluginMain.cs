@@ -405,7 +405,7 @@ namespace HighlightSelection
                 if (m.Line < lineFrom || m.Line > lineTo) continue;
                 int pos = sci.MBSafePosition(m.Index);
                 exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(pos, true));
-                if (exprType != null)
+                if (exprType != null && (exprType.InClass == null || exprType.InClass == prevResult.InClass))
                 {
                     MemberModel member = exprType.Member;
                     if (!isLocalVar)
