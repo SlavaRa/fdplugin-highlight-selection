@@ -12,9 +12,7 @@ using ScintillaNet;
 using System.Windows.Forms;
 using ASCompletion.Completion;
 using ASCompletion.Model;
-using ASCompletion.Context;
 using ScintillaNet.Enums;
-using System.Drawing;
 
 namespace HighlightSelection
 {
