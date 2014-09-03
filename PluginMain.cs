@@ -122,13 +122,16 @@ namespace HighlightSelection
 			{
 				case EventType.FileSwitch:
                     RemoveHighlights(doc.SciControl);
-					if (doc.IsEditable)
-					{
+                    if (doc.IsEditable)
+                    {
                         ScintillaControl sci = doc.SciControl;
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
                         sci.DoubleClick += OnSciDoubleClick;
                         sci.Modified += OnSciModified;
+                        tempo.Interval = PluginBase.Settings.DisplayDelay;
+                        tempo.Start();
                     }
+                    else tempo.Stop();
 				    break;
 				case EventType.FileSave:
                     RemoveHighlights(doc.SciControl);
@@ -175,7 +178,6 @@ namespace HighlightSelection
             tempo = new Timer();
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Tick += OnTempoTick;
-            tempo.Start();
         }
 
         private void InitFlagsToColor()
@@ -225,7 +227,11 @@ namespace HighlightSelection
 
         private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
+            highlightUnderCursorTimer.Stop();
+            tempo.Stop();
             RemoveHighlights(sender);
+            tempo.Interval = PluginBase.Settings.DisplayDelay;
+            tempo.Start();
         }
 
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
