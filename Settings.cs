@@ -44,6 +44,11 @@ namespace HighlightSelection
         [DefaultValue(typeof(IndicatorStyle), "Box")]
         public IndicatorStyle HighlightStyle { get; set; }
 
+        [Category("General")]
+        [DisplayName("Enable Annotations Bar")]
+        [DefaultValue(true)]
+        public bool EnableAnnotationBar { get; set; }
+
         [Category("Highlight references to symbol under cursor")]
         [DisplayName("Enabled")]
         [DefaultValue(DEFAULT_HIGHLIGHT_UNDER_CURSOR)]

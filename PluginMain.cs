@@ -10,6 +10,7 @@ using ScintillaNet.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -31,7 +32,8 @@ namespace HighlightSelection
         private ASResult prevResult;
         private string prevToken;
         private readonly int MARKER_NUMBER = 0;
-        private Dictionary<FlagType, int> flagsToColor;
+        private Dictionary<FlagType, Color> flagsToColor;
+        private Panel annotationsBar;
 
 		#region Required Properties
 
@@ -100,9 +102,9 @@ namespace HighlightSelection
 		{
 	        InitBasics();
 			LoadSettings();
-			AddEventHandlers();
             InitTimers();
             InitFlagsToColor();
+			AddEventHandlers();
             UpdateHighlightUnderCursorTimer();
 		}
 
@@ -115,7 +117,7 @@ namespace HighlightSelection
 		    SaveSettings();
 		}
 
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
+		public void HandleEvent(object sender, NotifyEvent e, HandlingPriority prority)
 		{
             ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
 			switch (e.Type)
@@ -125,6 +127,13 @@ namespace HighlightSelection
                     if (doc.IsEditable)
                     {
                         ScintillaControl sci = doc.SciControl;
+                        if (annotationsBar == null || annotationsBar.Parent != doc.SplitContainer.Parent)
+                        {
+                            annotationsBar = new Panel();
+                            annotationsBar.Visible = false;
+                            doc.SplitContainer.Parent.Controls.Add(annotationsBar);
+                            doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
+                        }
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
                         sci.DoubleClick += OnSciDoubleClick;
                         sci.Modified += OnSciModified;
@@ -138,12 +147,13 @@ namespace HighlightSelection
                     break;
                 case EventType.SettingChanged:
                     InitFlagsToColor();
+                    UpdateAnnotationsBar();
                     UpdateHighlightUnderCursorTimer();
 				    break;
 			}
 		}
 
-		#endregion
+        #endregion
 
 		#region Custom Methods
 
@@ -154,11 +164,6 @@ namespace HighlightSelection
 			settingFilename = Path.Combine(path, "Settings.fdb");
 		}
 
-        private void AddEventHandlers()
-		{
-			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
-		}
-
         private void LoadSettings()
 		{
 			settings = new Settings();
@@ -166,15 +171,10 @@ namespace HighlightSelection
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
 		}
 
-		private void SaveSettings()
-		{
-			ObjectSerializer.Serialize(settingFilename, settings);
-		}
-
         private void InitTimers()
         {
             highlightUnderCursorTimer = new Timer();
-            highlightUnderCursorTimer.Tick += HighlighUnderCursorTimerTick;
+            highlightUnderCursorTimer.Tick += OnHighlighUnderCursorTimerTick;
             tempo = new Timer();
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Tick += OnTempoTick;
@@ -182,24 +182,34 @@ namespace HighlightSelection
 
         private void InitFlagsToColor()
         {
-            flagsToColor = new Dictionary<FlagType, int>();
-            flagsToColor[FlagType.Abstract] = DataConverter.ColorToInt32(settings.AbstractColor);
-            flagsToColor[FlagType.TypeDef] = DataConverter.ColorToInt32(settings.TypeDefColor);
-            flagsToColor[FlagType.Enum] = DataConverter.ColorToInt32(settings.EnumColor);
-            flagsToColor[FlagType.Class] = DataConverter.ColorToInt32(settings.ClassColor);
-            flagsToColor[FlagType.ParameterVar] = DataConverter.ColorToInt32(settings.MemberFunctionColor);
-            flagsToColor[FlagType.LocalVar] = DataConverter.ColorToInt32(settings.LocalVariableColor);
-            flagsToColor[FlagType.Constant] = DataConverter.ColorToInt32(settings.ConstantColor);
-            flagsToColor[FlagType.Variable] = DataConverter.ColorToInt32(settings.VariableColor);
-            flagsToColor[FlagType.Setter] = DataConverter.ColorToInt32(settings.AccessorColor);
-            flagsToColor[FlagType.Getter] = DataConverter.ColorToInt32(settings.AccessorColor);
-            flagsToColor[FlagType.Function] = DataConverter.ColorToInt32(settings.MethodColor);
-            flagsToColor[FlagType.Static & FlagType.Constant] = DataConverter.ColorToInt32(settings.StaticConstantColor);
-            flagsToColor[FlagType.Static & FlagType.Variable] = DataConverter.ColorToInt32(settings.StaticVariableColor);
-            flagsToColor[FlagType.Static & FlagType.Setter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
-            flagsToColor[FlagType.Static & FlagType.Getter] = DataConverter.ColorToInt32(settings.StaticAccessorColor);
-            flagsToColor[FlagType.Static & FlagType.Function] = DataConverter.ColorToInt32(settings.StaticMethodColor);
+            flagsToColor = new Dictionary<FlagType, Color>();
+            flagsToColor[FlagType.Abstract] = settings.AbstractColor;
+            flagsToColor[FlagType.TypeDef] = settings.TypeDefColor;
+            flagsToColor[FlagType.Enum] = settings.EnumColor;
+            flagsToColor[FlagType.Class] = settings.ClassColor;
+            flagsToColor[FlagType.ParameterVar] = settings.MemberFunctionColor;
+            flagsToColor[FlagType.LocalVar] = settings.LocalVariableColor;
+            flagsToColor[FlagType.Constant] = settings.ConstantColor;
+            flagsToColor[FlagType.Variable] = settings.VariableColor;
+            flagsToColor[FlagType.Setter] = settings.AccessorColor;
+            flagsToColor[FlagType.Getter] = settings.AccessorColor;
+            flagsToColor[FlagType.Function] = settings.MethodColor;
+            flagsToColor[FlagType.Static & FlagType.Constant] = settings.StaticConstantColor;
+            flagsToColor[FlagType.Static & FlagType.Variable] = settings.StaticVariableColor;
+            flagsToColor[FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor;
+            flagsToColor[FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor;
+            flagsToColor[FlagType.Static & FlagType.Function] = settings.StaticMethodColor;
         }
+
+        private void AddEventHandlers()
+		{
+			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
+		}
+
+		private void SaveSettings()
+		{
+			ObjectSerializer.Serialize(settingFilename, settings);
+		}
 
         private bool IsValidFile(string file)
         {
@@ -217,57 +227,56 @@ namespace HighlightSelection
             if (!settings.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
         }
 
-        private void OnSciDoubleClick(ScintillaControl sender)
-        {
-            RemoveHighlights(sender);
-            prevResult = null;
-            prevToken = sender.SelText.Trim();
-            AddHighlights(sender, GetResults(sender, prevToken));
-        }
-
-        private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
-        {
-            highlightUnderCursorTimer.Stop();
-            tempo.Stop();
-            RemoveHighlights(sender);
-            tempo.Interval = PluginBase.Settings.DisplayDelay;
-            tempo.Start();
-        }
-
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int color;
-            if (settings.HighlightUnderCursorEnabled && prevResult != null) color = GetHighlightColor();
-            else color = DataConverter.ColorToInt32(settings.HighlightColor);
+            int scaleX = 1;
+            if (annotationsBar != null)
+            {
+                annotationsBar.Controls.Clear();
+                scaleX = annotationsBar.Height / sci.LineCount;
+            }
+            Color color = settings.HighlightUnderCursorEnabled && prevResult != null ? GetHighlightColor() : settings.HighlightColor;
             int style = (int)settings.HighlightStyle;
             int mask = 1 << sci.StyleBits;
             int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
+            int argb = DataConverter.ColorToInt32(color);
             foreach (SearchMatch match in matches)
             {
                 int start = sci.MBSafePosition(match.Index);
                 int end = start + sci.MBSafeTextLength(match.Value);
                 sci.SetIndicStyle(0, style);
-                sci.SetIndicFore(0, color);
+                sci.SetIndicFore(0, argb);
                 sci.StartStyling(start, mask);
                 sci.SetStyling(end - start, mask);
                 sci.StartStyling(es, mask - 1);
+                int line = sci.LineFromPosition(start);
                 if (addLineMarker)
                 {
-                    int line = sci.LineFromPosition(start);
                     sci.MarkerAdd(line, MARKER_NUMBER);
-                    sci.MarkerSetBack(MARKER_NUMBER, color);
+                    sci.MarkerSetBack(MARKER_NUMBER, argb);
+                }
+                if (annotationsBar != null)
+                {
+                    Button item = new Button();
+                    item.FlatStyle = FlatStyle.Flat;
+                    item.Size = new Size(annotationsBar.Width, Math.Max(10, scaleX));
+                    item.BackColor = color;
+                    item.Location = new Point(0, annotationsBar.Height * line / sci.LineCount);
+                    item.Tag = line;
+                    item.MouseClick += (s, e) => sci.GotoLine((int)((Button)s).Tag);
+                    annotationsBar.Controls.Add(item);
                 }
             }
             prevPos = sci.CurrentPos;
         }
 
-        private int GetHighlightColor()
+        private Color GetHighlightColor()
         {
             if (settings.HighlightUnderCursorEnabled && prevResult != null && !prevResult.IsNull())
             {
-                if (prevResult.IsPackage) return DataConverter.ColorToInt32(settings.PackageColor);
+                if (prevResult.IsPackage) return settings.PackageColor;
                 FlagType flags = prevResult.Type != null && prevResult.Member == null ? prevResult.Type.Flags : prevResult.Member.Flags;
                 if ((flags & FlagType.Abstract) > 0) return flagsToColor[FlagType.Abstract];
                 if ((flags & FlagType.TypeDef) > 0) return flagsToColor[FlagType.TypeDef];
@@ -292,7 +301,7 @@ namespace HighlightSelection
                     if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Static & FlagType.Function];
                 }
             }
-            return DataConverter.ColorToInt32(settings.HighlightColor);
+            return settings.HighlightColor;
         }
 
         private void RemoveHighlights(ScintillaControl sci)
@@ -309,6 +318,7 @@ namespace HighlightSelection
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
+            if (annotationsBar != null) annotationsBar.Controls.Clear();
         }
 
         private List<SearchMatch> GetResults(ScintillaControl sci, string text)
@@ -319,44 +329,6 @@ namespace HighlightSelection
             search.NoCase = !settings.MatchCase;
             search.Filter = SearchFilter.None;
             return search.Matches(sci.Text);
-        }
-
-        private void OnTempoTick(object sender, EventArgs e)
-        {
-            ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
-            if (document == null) return;
-            ScintillaControl sci = document.SciControl;
-            if (sci == null) return;
-            int currentPos = sci.CurrentPos;
-            if (currentPos == prevPos) return;
-            string newToken = sci.GetWordFromPosition(currentPos);
-            if (settings.HighlightUnderCursorEnabled)
-            {
-                if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
-                if (prevResult != null)
-                {
-                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
-                    if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
-                    {
-                        RemoveHighlights(sci);
-                        highlightUnderCursorTimer.Start();
-                    }
-                }
-                else
-                {
-                    RemoveHighlights(sci);
-                    highlightUnderCursorTimer.Start();
-                }
-                
-            }
-            else if (newToken != prevToken) RemoveHighlights(sci);
-            prevPos = currentPos;
-        }
-
-        private void HighlighUnderCursorTimerTick(object sender, EventArgs e)
-        {
-            ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
-            if (sci != null) UpdateHighlightUnderCursor(sci);
         }
 
         private void UpdateHighlightUnderCursor(ScintillaControl sci)
@@ -421,6 +393,72 @@ namespace HighlightSelection
                 }
             }
             return newMatches;
+        }
+
+        private void UpdateAnnotationsBar()
+        {
+            ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            annotationsBar.Size = new System.Drawing.Size(6, sci.Height - 17);
+            annotationsBar.Location = new System.Drawing.Point(sci.Width - 21, annotationsBar.Location.Y);
+            annotationsBar.BackColor = System.Drawing.Color.Transparent;
+            annotationsBar.Visible = settings.EnableAnnotationBar
+                                && annotationsBar.Height < sci.LineCount * sci.TextHeight(sci.LineFromPosition(sci.CurrentPos));
+        }
+
+        private void OnSciDoubleClick(ScintillaControl sender)
+        {
+            RemoveHighlights(sender);
+            prevResult = null;
+            prevToken = sender.SelText.Trim();
+            AddHighlights(sender, GetResults(sender, prevToken));
+        }
+
+        private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+        {
+            highlightUnderCursorTimer.Stop();
+            tempo.Stop();
+            RemoveHighlights(sender);
+            UpdateAnnotationsBar();
+            tempo.Interval = PluginBase.Settings.DisplayDelay;
+            tempo.Start();
+        }
+
+        private void OnTempoTick(object sender, EventArgs e)
+        {
+            ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
+            if (document == null) return;
+            ScintillaControl sci = document.SciControl;
+            if (sci == null) return;
+            int currentPos = sci.CurrentPos;
+            if (currentPos == prevPos) return;
+            string newToken = sci.GetWordFromPosition(currentPos);
+            if (settings.HighlightUnderCursorEnabled)
+            {
+                if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
+                if (prevResult != null)
+                {
+                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
+                    if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
+                    {
+                        RemoveHighlights(sci);
+                        highlightUnderCursorTimer.Start();
+                    }
+                }
+                else
+                {
+                    RemoveHighlights(sci);
+                    highlightUnderCursorTimer.Start();
+                }
+
+            }
+            else if (newToken != prevToken) RemoveHighlights(sci);
+            prevPos = currentPos;
+        }
+
+        private void OnHighlighUnderCursorTimerTick(object sender, EventArgs e)
+        {
+            ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
+            if (sci != null) UpdateHighlightUnderCursor(sci);
         }
 
         #endregion
