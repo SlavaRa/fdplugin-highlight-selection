@@ -137,6 +137,7 @@ namespace HighlightSelection
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
                         sci.DoubleClick += OnSciDoubleClick;
                         sci.Modified += OnSciModified;
+                        UpdateAnnotationsBar();
                         tempo.Interval = PluginBase.Settings.DisplayDelay;
                         tempo.Start();
                     }
