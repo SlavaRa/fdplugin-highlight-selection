@@ -1,18 +1,18 @@
-using System;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.ComponentModel;
-using PluginCore.Utilities;
-using PluginCore.Managers;
-using PluginCore.Helpers;
-using PluginCore;
-using PluginCore.FRService;
-using System.Collections.Generic;
-using ScintillaNet;
-using System.Windows.Forms;
 using ASCompletion.Completion;
 using ASCompletion.Model;
+using PluginCore;
+using PluginCore.FRService;
+using PluginCore.Helpers;
+using PluginCore.Managers;
+using PluginCore.Utilities;
+using ScintillaNet;
 using ScintillaNet.Enums;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace HighlightSelection
 {
@@ -106,7 +106,7 @@ namespace HighlightSelection
             UpdateHighlightUnderCursorTimer();
 		}
 
-		public void Dispose()
+        public void Dispose()
 		{
             highlightUnderCursorTimer.Dispose();
             highlightUnderCursorTimer = null;
@@ -126,9 +126,9 @@ namespace HighlightSelection
 					{
                         ScintillaControl sci = doc.SciControl;
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
-                        sci.DoubleClick += onSciDoubleClick;
-                        sci.Modified += onSciModified;
-					}
+                        sci.DoubleClick += OnSciDoubleClick;
+                        sci.Modified += OnSciModified;
+                    }
 				    break;
 				case EventType.FileSave:
                     RemoveHighlights(doc.SciControl);
@@ -171,10 +171,10 @@ namespace HighlightSelection
         private void InitTimers()
         {
             highlightUnderCursorTimer = new Timer();
-            highlightUnderCursorTimer.Tick += highlighUnderCursorTimerTick;
+            highlightUnderCursorTimer.Tick += HighlighUnderCursorTimerTick;
             tempo = new Timer();
             tempo.Interval = PluginBase.Settings.DisplayDelay;
-            tempo.Tick += onTempoTick;
+            tempo.Tick += OnTempoTick;
             tempo.Start();
         }
 
@@ -215,7 +215,7 @@ namespace HighlightSelection
             if (!settings.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
         }
 
-        private void onSciDoubleClick(ScintillaControl sender)
+        private void OnSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
             prevResult = null;
@@ -223,7 +223,7 @@ namespace HighlightSelection
             AddHighlights(sender, GetResults(sender, prevToken));
         }
 
-        private void onSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+        private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
             RemoveHighlights(sender);
         }
@@ -315,9 +315,10 @@ namespace HighlightSelection
             return search.Matches(sci.Text);
         }
 
-        private void onTempoTick(object sender, EventArgs e)
+        private void OnTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
+            if (document == null) return;
             ScintillaControl sci = document.SciControl;
             if (sci == null) return;
             int currentPos = sci.CurrentPos;
@@ -346,7 +347,7 @@ namespace HighlightSelection
             prevPos = currentPos;
         }
 
-        private void highlighUnderCursorTimerTick(object sender, EventArgs e)
+        private void HighlighUnderCursorTimerTick(object sender, EventArgs e)
         {
             ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
             if (sci != null) UpdateHighlightUnderCursor(sci);
