@@ -127,16 +127,15 @@ namespace HighlightSelection
                     if (doc.IsEditable)
                     {
                         ScintillaControl sci = doc.SciControl;
-                        if (annotationsBar == null || annotationsBar.Parent != doc.SplitContainer.Parent)
-                        {
-                            annotationsBar = new Panel();
-                            annotationsBar.Visible = false;
-                            doc.SplitContainer.Parent.Controls.Add(annotationsBar);
-                            doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
-                        }
+                        if (annotationsBar != null && annotationsBar.Parent != null) annotationsBar.Parent.Controls.Remove(annotationsBar);
+                        annotationsBar = new Panel();
+                        annotationsBar.Visible = false;
+                        doc.SplitContainer.Parent.Controls.Add(annotationsBar);
+                        doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
                         sci.DoubleClick += OnSciDoubleClick;
                         sci.Modified += OnSciModified;
+                        sci.Resize += OnSciResize;
                         UpdateAnnotationsBar();
                         tempo.Interval = PluginBase.Settings.DisplayDelay;
                         tempo.Start();
@@ -422,6 +421,11 @@ namespace HighlightSelection
             UpdateAnnotationsBar();
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Start();
+        }
+
+        private void OnSciResize(object sender, EventArgs e)
+        {
+            UpdateAnnotationsBar();
         }
 
         private void OnTempoTick(object sender, EventArgs e)
