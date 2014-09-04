@@ -259,13 +259,25 @@ namespace HighlightSelection
                 }
                 if (annotationsBar != null)
                 {
-                    Button item = new Button();
-                    item.FlatStyle = FlatStyle.Flat;
-                    item.Size = new Size(annotationsBar.Width, Math.Max(10, scaleX));
-                    item.BackColor = color;
-                    item.Location = new Point(0, annotationsBar.Height * line / sci.LineCount);
-                    item.Tag = line;
-                    item.MouseClick += (s, e) => sci.GotoLine((int)((Button)s).Tag);
+                    Button item = new Button()
+                    {
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
+                        BackColor = color,
+                        ForeColor = color,
+                        Location = new Point(0, annotationsBar.Height * line / sci.LineCount),
+                        Cursor = Cursors.Hand
+                    };
+                    item.FlatAppearance.BorderSize = 0;
+                    item.FlatAppearance.MouseOverBackColor = color;
+                    item.FlatAppearance.MouseDownBackColor = color;
+                    item.FlatAppearance.CheckedBackColor = color;
+                    item.MouseClick += (s, e) =>
+                    {
+                        sci.Focus();
+                        sci.GotoLine(line);
+                        sci.SetSel(start, end);
+                    };
                     annotationsBar.Controls.Add(item);
                 }
             }
