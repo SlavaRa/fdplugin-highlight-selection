@@ -23,16 +23,17 @@ namespace HighlightSelection
 		private string pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
 		private string pluginHelp = "";
 		private string pluginDesc = "A plugin to highlight your selected text";
-		private string pluginAuth = "mike.cann@gmail.com";
+		private string pluginAuth = "mike.cann@gmail.com, SlavaRa";
 		private string settingFilename;
 		private Settings settings;
-        private Timer highlightUnderCursorTimer;
-        private Timer tempo;
+        private FlagToColor flagToColor;
+        private Timer underCursorTempo = new Timer();
+        private Timer tempo = new Timer();
         private int prevPos;
         private ASResult prevResult;
         private string prevToken;
         private readonly int MARKER_NUMBER = 0;
-        private Dictionary<FlagType, Color> flagsToColor;
+        private readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
         private Panel annotationsBar;
 
 		#region Required Properties
@@ -102,16 +103,16 @@ namespace HighlightSelection
 		{
 	        InitBasics();
 			LoadSettings();
+            flagToColor = new FlagToColor(settings);
             InitTimers();
-            InitFlagsToColor();
 			AddEventHandlers();
             UpdateHighlightUnderCursorTimer();
 		}
 
         public void Dispose()
 		{
-            highlightUnderCursorTimer.Dispose();
-            highlightUnderCursorTimer = null;
+            underCursorTempo.Dispose();
+            underCursorTempo = null;
             tempo.Dispose();
             tempo = null;
 		    SaveSettings();
@@ -146,7 +147,7 @@ namespace HighlightSelection
                     RemoveHighlights(doc.SciControl);
                     break;
                 case EventType.SettingChanged:
-                    InitFlagsToColor();
+                    flagToColor = new FlagToColor(settings);
                     UpdateAnnotationsBar();
                     UpdateHighlightUnderCursorTimer();
 				    break;
@@ -173,32 +174,9 @@ namespace HighlightSelection
 
         private void InitTimers()
         {
-            highlightUnderCursorTimer = new Timer();
-            highlightUnderCursorTimer.Tick += OnHighlighUnderCursorTimerTick;
-            tempo = new Timer();
+            underCursorTempo.Tick += OnHighlighUnderCursorTimerTick;
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Tick += OnTempoTick;
-        }
-
-        private void InitFlagsToColor()
-        {
-            flagsToColor = new Dictionary<FlagType, Color>();
-            flagsToColor[FlagType.Abstract] = settings.AbstractColor;
-            flagsToColor[FlagType.TypeDef] = settings.TypeDefColor;
-            flagsToColor[FlagType.Enum] = settings.EnumColor;
-            flagsToColor[FlagType.Class] = settings.ClassColor;
-            flagsToColor[FlagType.ParameterVar] = settings.MemberFunctionColor;
-            flagsToColor[FlagType.LocalVar] = settings.LocalVariableColor;
-            flagsToColor[FlagType.Constant] = settings.ConstantColor;
-            flagsToColor[FlagType.Variable] = settings.VariableColor;
-            flagsToColor[FlagType.Setter] = settings.AccessorColor;
-            flagsToColor[FlagType.Getter] = settings.AccessorColor;
-            flagsToColor[FlagType.Function] = settings.MethodColor;
-            flagsToColor[FlagType.Static & FlagType.Constant] = settings.StaticConstantColor;
-            flagsToColor[FlagType.Static & FlagType.Variable] = settings.StaticVariableColor;
-            flagsToColor[FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor;
-            flagsToColor[FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor;
-            flagsToColor[FlagType.Static & FlagType.Function] = settings.StaticMethodColor;
         }
 
         private void AddEventHandlers()
@@ -223,8 +201,8 @@ namespace HighlightSelection
         {
             if (settings.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
                 settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-            highlightUnderCursorTimer.Interval = settings.HighlightUnderCursorUpdateInteval;
-            if (!settings.HighlightUnderCursorEnabled) highlightUnderCursorTimer.Stop();
+            underCursorTempo.Interval = settings.HighlightUnderCursorUpdateInteval;
+            if (!settings.HighlightUnderCursorEnabled) underCursorTempo.Stop();
         }
 
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
@@ -234,6 +212,7 @@ namespace HighlightSelection
             if (annotationsBar != null)
             {
                 annotationsBar.Controls.Clear();
+                locationYToAnnotationMarker.Clear();
                 scaleX = annotationsBar.Height / sci.LineCount;
             }
             Color color = settings.HighlightUnderCursorEnabled && prevResult != null ? GetHighlightColor() : settings.HighlightColor;
@@ -259,26 +238,31 @@ namespace HighlightSelection
                 }
                 if (annotationsBar != null)
                 {
-                    Button item = new Button()
+                    int y = annotationsBar.Height * line / sci.LineCount;
+                    if (!locationYToAnnotationMarker.ContainsKey(y))
                     {
-                        FlatStyle = FlatStyle.Flat,
-                        Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
-                        BackColor = color,
-                        ForeColor = color,
-                        Location = new Point(0, annotationsBar.Height * line / sci.LineCount),
-                        Cursor = Cursors.Hand
-                    };
-                    item.FlatAppearance.BorderSize = 0;
-                    item.FlatAppearance.MouseOverBackColor = color;
-                    item.FlatAppearance.MouseDownBackColor = color;
-                    item.FlatAppearance.CheckedBackColor = color;
-                    item.MouseClick += (s, e) =>
-                    {
-                        sci.Focus();
-                        sci.GotoLine(line);
-                        sci.SetSel(start, end);
-                    };
-                    annotationsBar.Controls.Add(item);
+                        Button item = new Button()
+                        {
+                            FlatStyle = FlatStyle.Flat,
+                            Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
+                            BackColor = color,
+                            ForeColor = color,
+                            Location = new Point(0, y),
+                            Cursor = Cursors.Hand
+                        };
+                        item.FlatAppearance.BorderSize = 0;
+                        item.FlatAppearance.MouseOverBackColor = color;
+                        item.FlatAppearance.MouseDownBackColor = color;
+                        item.FlatAppearance.CheckedBackColor = color;
+                        item.MouseClick += (s, e) =>
+                        {
+                            sci.Focus();
+                            sci.GotoLine(line);
+                            sci.SetSel(start, end);
+                        };
+                        locationYToAnnotationMarker[y] = item;
+                        annotationsBar.Controls.Add(item);
+                    }
                 }
             }
             prevPos = sci.CurrentPos;
@@ -290,28 +274,8 @@ namespace HighlightSelection
             {
                 if (prevResult.IsPackage) return settings.PackageColor;
                 FlagType flags = prevResult.Type != null && prevResult.Member == null ? prevResult.Type.Flags : prevResult.Member.Flags;
-                if ((flags & FlagType.Abstract) > 0) return flagsToColor[FlagType.Abstract];
-                if ((flags & FlagType.TypeDef) > 0) return flagsToColor[FlagType.TypeDef];
-                if ((flags & FlagType.Enum) > 0) return flagsToColor[FlagType.Enum];
-                if ((flags & FlagType.Class) > 0) return flagsToColor[FlagType.Class];
-                if ((flags & FlagType.ParameterVar) > 0) return flagsToColor[FlagType.ParameterVar];
-                if ((flags & FlagType.LocalVar) > 0) return flagsToColor[FlagType.LocalVar];
-                if ((flags & FlagType.Static) == 0)
-                {
-                    if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Constant];
-                    if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Variable];
-                    if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Setter];
-                    if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Getter];
-                    if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Function];
-                }
-                else
-                {
-                    if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Static & FlagType.Constant];
-                    if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Static & FlagType.Variable];
-                    if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Static & FlagType.Setter];
-                    if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Static & FlagType.Getter];
-                    if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Static & FlagType.Function];
-                }
+                Color color = flagToColor.GetColor(flags);
+                if (!Color.Empty.Equals(color)) return color;
             }
             return settings.HighlightColor;
         }
@@ -330,7 +294,11 @@ namespace HighlightSelection
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
-            if (annotationsBar != null) annotationsBar.Controls.Clear();
+            if (annotationsBar != null)
+            {
+                annotationsBar.Controls.Clear();
+                locationYToAnnotationMarker.Clear();
+            }
         }
 
         private List<SearchMatch> GetResults(ScintillaControl sci, string text)
@@ -364,7 +332,7 @@ namespace HighlightSelection
                     prevResult = result;
                     List<SearchMatch> matches = FilterResults(GetResults(sci, prevToken), result, sci);
                     if (matches == null || matches.Count == 0) return;
-                    highlightUnderCursorTimer.Stop();
+                    underCursorTempo.Stop();
                     AddHighlights(sci, matches);
                 }
             }
@@ -417,6 +385,10 @@ namespace HighlightSelection
                                 && annotationsBar.Height < sci.LineCount * sci.TextHeight(sci.LineFromPosition(sci.CurrentPos));
         }
 
+        #endregion
+
+        #region Event Handlers
+
         private void OnSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
@@ -427,7 +399,7 @@ namespace HighlightSelection
 
         private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
-            highlightUnderCursorTimer.Stop();
+            underCursorTempo.Stop();
             tempo.Stop();
             RemoveHighlights(sender);
             UpdateAnnotationsBar();
@@ -451,20 +423,20 @@ namespace HighlightSelection
             string newToken = sci.GetWordFromPosition(currentPos);
             if (settings.HighlightUnderCursorEnabled)
             {
-                if (prevPos != currentPos) highlightUnderCursorTimer.Stop();
+                if (prevPos != currentPos) underCursorTempo.Stop();
                 if (prevResult != null)
                 {
                     ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
                     if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
                     {
                         RemoveHighlights(sci);
-                        highlightUnderCursorTimer.Start();
+                        underCursorTempo.Start();
                     }
                 }
                 else
                 {
                     RemoveHighlights(sci);
-                    highlightUnderCursorTimer.Start();
+                    underCursorTempo.Start();
                 }
 
             }
@@ -479,5 +451,65 @@ namespace HighlightSelection
         }
 
         #endregion
+    }
+
+    class FlagToColor
+    {
+        private readonly Settings settings;
+        private Dictionary<FlagType, Color> flagsToColor;
+
+        public FlagToColor(Settings settings)
+        {
+            this.settings = settings;
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            flagsToColor = new Dictionary<FlagType, Color>();
+            flagsToColor[FlagType.Abstract] = settings.AbstractColor;
+            flagsToColor[FlagType.TypeDef] = settings.TypeDefColor;
+            flagsToColor[FlagType.Enum] = settings.EnumColor;
+            flagsToColor[FlagType.Class] = settings.ClassColor;
+            flagsToColor[FlagType.ParameterVar] = settings.MemberFunctionColor;
+            flagsToColor[FlagType.LocalVar] = settings.LocalVariableColor;
+            flagsToColor[FlagType.Constant] = settings.ConstantColor;
+            flagsToColor[FlagType.Variable] = settings.VariableColor;
+            flagsToColor[FlagType.Setter] = settings.AccessorColor;
+            flagsToColor[FlagType.Getter] = settings.AccessorColor;
+            flagsToColor[FlagType.Function] = settings.MethodColor;
+            flagsToColor[FlagType.Static & FlagType.Constant] = settings.StaticConstantColor;
+            flagsToColor[FlagType.Static & FlagType.Variable] = settings.StaticVariableColor;
+            flagsToColor[FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor;
+            flagsToColor[FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor;
+            flagsToColor[FlagType.Static & FlagType.Function] = settings.StaticMethodColor;
+        }
+
+        public Color GetColor(FlagType flags)
+        {
+            if ((flags & FlagType.Abstract) > 0) return flagsToColor[FlagType.Abstract];
+            if ((flags & FlagType.TypeDef) > 0) return flagsToColor[FlagType.TypeDef];
+            if ((flags & FlagType.Enum) > 0) return flagsToColor[FlagType.Enum];
+            if ((flags & FlagType.Class) > 0) return flagsToColor[FlagType.Class];
+            if ((flags & FlagType.ParameterVar) > 0) return flagsToColor[FlagType.ParameterVar];
+            if ((flags & FlagType.LocalVar) > 0) return flagsToColor[FlagType.LocalVar];
+            if ((flags & FlagType.Static) == 0)
+            {
+                if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Constant];
+                if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Variable];
+                if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Setter];
+                if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Getter];
+                if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Function];
+            }
+            else
+            {
+                if ((flags & FlagType.Constant) > 0) return flagsToColor[FlagType.Static & FlagType.Constant];
+                if ((flags & FlagType.Variable) > 0) return flagsToColor[FlagType.Static & FlagType.Variable];
+                if ((flags & FlagType.Setter) > 0) return flagsToColor[FlagType.Static & FlagType.Setter];
+                if ((flags & FlagType.Getter) > 0) return flagsToColor[FlagType.Static & FlagType.Getter];
+                if ((flags & FlagType.Function) > 0) return flagsToColor[FlagType.Static & FlagType.Function];
+            }
+            return Color.Empty;
+        }
     }
 }

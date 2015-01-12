@@ -11,9 +11,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HighlightSelection")]
 [assembly: AssemblyDescription("Highlight Selection plugin For FlashDevelop")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("mikecann.co.uk")]
+[assembly: AssemblyCompany("mikecann.co.uk, SlavaRa")]
 [assembly: AssemblyProduct("HighlightSelection")]
-[assembly: AssemblyCopyright("mikecann.co.uk 2005-2008")]
+[assembly: AssemblyCopyright("mikecann.co.uk 2005-2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
