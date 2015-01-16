@@ -19,12 +19,13 @@ namespace HighlightSelection
 {
 	public class PluginMain : IPlugin
 	{
-		private string pluginName = "Highlight Selection";
-		private string pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
-		private string pluginHelp = "";
-		private string pluginDesc = "A plugin to highlight your selected text";
-		private string pluginAuth = "mike.cann@gmail.com, SlavaRa";
-		private string settingFilename;
+	    private const string pluginName = "Highlight Selection";
+	    private const string pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
+	    private const string pluginHelp = "";
+	    private const string pluginDesc = "A plugin to highlight your selected text";
+	    private const string pluginAuth = "mike.cann@gmail.com, SlavaRa";
+	    private const int MARKER_NUMBER = 0;
+	    private string settingFilename;
 		private Settings settings;
         private FlagToColor flagToColor;
         private Timer underCursorTempo = new Timer();
@@ -32,8 +33,7 @@ namespace HighlightSelection
         private int prevPos;
         private ASResult prevResult;
         private string prevToken;
-        private readonly int MARKER_NUMBER = 0;
-        private readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
+	    private readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
         private Panel annotationsBar;
 
 		#region Required Properties
@@ -41,59 +41,38 @@ namespace HighlightSelection
         /// <summary>
         /// Api level of the plugin
         /// </summary>
-        public int Api
-        {
-            get { return 1; }
-        }
+        public int Api { get { return 1; }}
 
 		/// <summary>
 		/// Name of the plugin
 		/// </summary> 
-		public string Name
-		{
-			get { return pluginName; }
-		}
+		public string Name { get { return pluginName; }}
 
 		/// <summary>
 		/// GUID of the plugin
 		/// </summary>
-		public string Guid
-		{
-			get { return pluginGuid; }
-		}
+		public string Guid { get { return pluginGuid; }}
 
 		/// <summary>
 		/// Author of the plugin
 		/// </summary> 
-		public string Author
-		{
-			get { return pluginAuth; }
-		}
+		public string Author { get { return pluginAuth; }}
 
 		/// <summary>
 		/// Description of the plugin
 		/// </summary> 
-		public string Description
-		{
-			get { return pluginDesc; }
-		}
+		public string Description { get { return pluginDesc; }}
 
 		/// <summary>
 		/// Web address for help
 		/// </summary> 
-		public string Help
-		{
-			get { return pluginHelp; }
-		}
+		public string Help { get { return pluginHelp; }}
 
 		/// <summary>
 		/// Object that contains the settings
 		/// </summary>
 		[Browsable(false)]
-		public Object Settings
-		{
-			get { return settings; }
-		}
+		public Object Settings { get { return settings; }}
 
 		#endregion
 
@@ -129,8 +108,7 @@ namespace HighlightSelection
                     {
                         ScintillaControl sci = doc.SciControl;
                         if (annotationsBar != null && annotationsBar.Parent != null) annotationsBar.Parent.Controls.Remove(annotationsBar);
-                        annotationsBar = new Panel();
-                        annotationsBar.Visible = false;
+                        annotationsBar = new Panel {Visible = false};
                         doc.SplitContainer.Parent.Controls.Add(annotationsBar);
                         doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
@@ -189,7 +167,7 @@ namespace HighlightSelection
 			ObjectSerializer.Serialize(settingFilename, settings);
 		}
 
-        private bool IsValidFile(string file)
+        private static bool IsValidFile(string file)
         {
             IProject project = PluginBase.CurrentProject;
             if (project == null) return false;
@@ -220,7 +198,7 @@ namespace HighlightSelection
             int mask = 1 << sci.StyleBits;
             int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
-            int argb = DataConverter.ColorToInt32(color);
+            int argb = color.ToArgb();
             foreach (SearchMatch match in matches)
             {
                 int start = sci.MBSafePosition(match.Index);
@@ -236,34 +214,30 @@ namespace HighlightSelection
                     sci.MarkerAdd(line, MARKER_NUMBER);
                     sci.MarkerSetBack(MARKER_NUMBER, argb);
                 }
-                if (annotationsBar != null)
+                if (annotationsBar == null) continue;
+                int y = annotationsBar.Height * line / sci.LineCount;
+                if (locationYToAnnotationMarker.ContainsKey(y)) continue;
+                Button item = new Button()
                 {
-                    int y = annotationsBar.Height * line / sci.LineCount;
-                    if (!locationYToAnnotationMarker.ContainsKey(y))
-                    {
-                        Button item = new Button()
-                        {
-                            FlatStyle = FlatStyle.Flat,
-                            Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
-                            BackColor = color,
-                            ForeColor = color,
-                            Location = new Point(0, y),
-                            Cursor = Cursors.Hand
-                        };
-                        item.FlatAppearance.BorderSize = 0;
-                        item.FlatAppearance.MouseOverBackColor = color;
-                        item.FlatAppearance.MouseDownBackColor = color;
-                        item.FlatAppearance.CheckedBackColor = color;
-                        item.MouseClick += (s, e) =>
-                        {
-                            sci.Focus();
-                            sci.GotoLine(line);
-                            sci.SetSel(start, end);
-                        };
-                        locationYToAnnotationMarker[y] = item;
-                        annotationsBar.Controls.Add(item);
-                    }
-                }
+                    FlatStyle = FlatStyle.Flat,
+                    Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
+                    BackColor = color,
+                    ForeColor = color,
+                    Location = new Point(0, y),
+                    Cursor = Cursors.Hand
+                };
+                item.FlatAppearance.BorderSize = 0;
+                item.FlatAppearance.MouseOverBackColor = color;
+                item.FlatAppearance.MouseDownBackColor = color;
+                item.FlatAppearance.CheckedBackColor = color;
+                item.MouseClick += (s, e) =>
+                {
+                    sci.Focus();
+                    sci.GotoLine(line);
+                    sci.SetSel(start, end);
+                };
+                locationYToAnnotationMarker[y] = item;
+                annotationsBar.Controls.Add(item);
             }
             prevPos = sci.CurrentPos;
         }
@@ -294,20 +268,20 @@ namespace HighlightSelection
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
-            if (annotationsBar != null)
-            {
-                annotationsBar.Controls.Clear();
-                locationYToAnnotationMarker.Clear();
-            }
+            if (annotationsBar == null) return;
+            annotationsBar.Controls.Clear();
+            locationYToAnnotationMarker.Clear();
         }
 
         private List<SearchMatch> GetResults(ScintillaControl sci, string text)
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
-            FRSearch search = new FRSearch(text);
-            search.WholeWord = settings.WholeWords;
-            search.NoCase = !settings.MatchCase;
-            search.Filter = SearchFilter.None;
+            FRSearch search = new FRSearch(text)
+            {
+                WholeWord = settings.WholeWords,
+                NoCase = !settings.MatchCase,
+                Filter = SearchFilter.None
+            };
             return search.Matches(sci.Text);
         }
 
@@ -338,19 +312,18 @@ namespace HighlightSelection
             }
         }
 
-        private List<SearchMatch> FilterResults(List<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
+        private List<SearchMatch> FilterResults(ICollection<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
         {
             if (matches == null || matches.Count == 0) return null;
-            MemberModel contextMember = null;
+            const FlagType localVarMask = FlagType.LocalVar | FlagType.ParameterVar;
             int lineFrom = 0;
             int lineTo = sci.LineCount;
-            FlagType localVarMask = FlagType.LocalVar | FlagType.ParameterVar;
             bool isLocalVar = false;
             if (exprType.Member != null)
             {
                 if ((exprType.Member.Flags & localVarMask) > 0)
                 {
-                    contextMember = exprType.Context.ContextFunction;
+                    var contextMember = exprType.Context.ContextFunction;
                     lineFrom = contextMember.LineFrom;
                     lineTo = contextMember.LineTo;
                     isLocalVar = true;
@@ -362,15 +335,13 @@ namespace HighlightSelection
                 if (m.Line < lineFrom || m.Line > lineTo) continue;
                 int pos = sci.MBSafePosition(m.Index);
                 exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(pos, true));
-                if (exprType != null && (exprType.InClass == null || exprType.InClass == prevResult.InClass))
+                if (exprType == null || (exprType.InClass != null && exprType.InClass != prevResult.InClass)) continue;
+                MemberModel member = exprType.Member;
+                if (!isLocalVar)
                 {
-                    MemberModel member = exprType.Member;
-                    if (!isLocalVar)
-                    {
-                        if ((exprType.Type != null && member == null) || (member != null && (member.Flags & localVarMask) == 0)) newMatches.Add(m);
-                    }
-                    else if (member != null && (member.Flags & localVarMask) > 0) newMatches.Add(m);
+                    if ((exprType.Type != null && member == null) || (member != null && (member.Flags & localVarMask) == 0)) newMatches.Add(m);
                 }
+                else if (member != null && (member.Flags & localVarMask) > 0) newMatches.Add(m);
             }
             return newMatches;
         }
@@ -378,9 +349,9 @@ namespace HighlightSelection
         private void UpdateAnnotationsBar()
         {
             ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
-            annotationsBar.Size = new System.Drawing.Size(6, sci.Height - 17);
-            annotationsBar.Location = new System.Drawing.Point(sci.Width - 21, annotationsBar.Location.Y);
-            annotationsBar.BackColor = System.Drawing.Color.Transparent;
+            annotationsBar.Size = new Size(6, sci.Height - 17);
+            annotationsBar.Location = new Point(sci.Width - 21, annotationsBar.Location.Y);
+            annotationsBar.BackColor = Color.Transparent;
             annotationsBar.Visible = settings.EnableAnnotationBar
                                 && annotationsBar.Height < sci.LineCount * sci.TextHeight(sci.LineFromPosition(sci.CurrentPos));
         }
