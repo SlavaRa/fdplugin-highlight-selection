@@ -1,8 +1,0 @@
-D:\projects\FlashDevelop-fork\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.dll
-D:\projects\FlashDevelop-fork\FlashDevelop\Bin\Debug\Plugins\HighlightSelection.pdb
-D:\projects\fd-highlight-selected-plugin\obj\Debug\HighlightSelection.csprojResolveAssemblyReference.cache
-D:\projects\fd-highlight-selected-plugin\obj\Debug\HighlightSelection.dll
-D:\projects\fd-highlight-selected-plugin\obj\Debug\HighlightSelection.pdb
-D:\projects\fd-highlight-selected-plugin\HighlightSelection\obj\Debug\HighlightSelection.csprojResolveAssemblyReference.cache
-D:\projects\fd-highlight-selected-plugin\HighlightSelection\obj\Debug\HighlightSelection.dll
-D:\projects\fd-highlight-selected-plugin\HighlightSelection\obj\Debug\HighlightSelection.pdb
