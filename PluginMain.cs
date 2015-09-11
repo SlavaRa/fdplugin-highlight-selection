@@ -150,17 +150,11 @@ namespace HighlightSelection
             tempo.Tick += OnTempoTick;
         }
 
-        void AddEventHandlers()
-		{
-			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
-		}
+        void AddEventHandlers() => EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
 
-		void SaveSettings()
-		{
-			ObjectSerializer.Serialize(settingFilename, settings);
-		}
+	    void SaveSettings() => ObjectSerializer.Serialize(settingFilename, settings);
 
-        static bool IsValidFile(string file)
+	    static bool IsValidFile(string file)
         {
             IProject project = PluginBase.CurrentProject;
             if (project == null) return false;
@@ -366,7 +360,7 @@ namespace HighlightSelection
                 if (control is ScrollBarEx && control.Width < control.Height)
                     return control.Width;
             }
-            return 17;
+            return 0;
 	    }
 
         static int GetVScrollBarHeight(ScintillaControl sci)
@@ -401,12 +395,9 @@ namespace HighlightSelection
             tempo.Start();
         }
 
-        void OnSciResize(object sender, EventArgs e)
-        {
-            UpdateAnnotationsBar((ScintillaControl)sender);
-        }
+        void OnSciResize(object sender, EventArgs e) => UpdateAnnotationsBar((ScintillaControl)sender);
 
-        void OnTempoTick(object sender, EventArgs e)
+	    void OnTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
             ScintillaControl sci = document?.SciControl;
@@ -457,28 +448,25 @@ namespace HighlightSelection
             Initialize();
         }
 
-        void Initialize()
+        void Initialize() => flagsToColor = new Dictionary<FlagType, Color>
         {
-            flagsToColor = new Dictionary<FlagType, Color>
-            {
-                [FlagType.Abstract] = settings.AbstractColor,
-                [FlagType.TypeDef] = settings.TypeDefColor,
-                [FlagType.Enum] = settings.EnumColor,
-                [FlagType.Class] = settings.ClassColor,
-                [FlagType.ParameterVar] = settings.MemberFunctionColor,
-                [FlagType.LocalVar] = settings.LocalVariableColor,
-                [FlagType.Constant] = settings.ConstantColor,
-                [FlagType.Variable] = settings.VariableColor,
-                [FlagType.Setter] = settings.AccessorColor,
-                [FlagType.Getter] = settings.AccessorColor,
-                [FlagType.Function] = settings.MethodColor,
-                [FlagType.Static & FlagType.Constant] = settings.StaticConstantColor,
-                [FlagType.Static & FlagType.Variable] = settings.StaticVariableColor,
-                [FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor,
-                [FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor,
-                [FlagType.Static & FlagType.Function] = settings.StaticMethodColor
-            };
-        }
+            [FlagType.Abstract] = settings.AbstractColor,
+            [FlagType.TypeDef] = settings.TypeDefColor,
+            [FlagType.Enum] = settings.EnumColor,
+            [FlagType.Class] = settings.ClassColor,
+            [FlagType.ParameterVar] = settings.MemberFunctionColor,
+            [FlagType.LocalVar] = settings.LocalVariableColor,
+            [FlagType.Constant] = settings.ConstantColor,
+            [FlagType.Variable] = settings.VariableColor,
+            [FlagType.Setter] = settings.AccessorColor,
+            [FlagType.Getter] = settings.AccessorColor,
+            [FlagType.Function] = settings.MethodColor,
+            [FlagType.Static & FlagType.Constant] = settings.StaticConstantColor,
+            [FlagType.Static & FlagType.Variable] = settings.StaticVariableColor,
+            [FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor,
+            [FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor,
+            [FlagType.Static & FlagType.Function] = settings.StaticMethodColor
+        };
 
         public Color GetColor(FlagType flags)
         {
