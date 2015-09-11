@@ -29,3 +29,4 @@ using System.Runtime.InteropServices;
 // numbers with the '*' character (the default):
 
 [assembly: AssemblyVersion("1.0.0.*")]
+[assembly: GuidAttribute("1f387fab-421b-42ac-a985-72a03534f731")]

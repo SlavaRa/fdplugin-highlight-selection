@@ -1,7 +1,0 @@
-C:\Documents and Settings\Mike\Desktop\personal\FD3\FlashDevelop\Bin\Debug\Plugins\SamplePlugin.dll
-C:\Documents and Settings\Mike\Desktop\personal\FD3\FlashDevelop\Bin\Debug\Plugins\SamplePlugin.pdb
-C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\SamplePlugin\obj\Debug\ResolveAssemblyReference.cache
-C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\SamplePlugin\obj\Debug\SamplePlugin.Resources.en_US.resources
-C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\SamplePlugin\obj\Debug\SamplePlugin.csproj.GenerateResource.Cache
-C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\SamplePlugin\obj\Debug\SamplePlugin.dll
-C:\Documents and Settings\Mike\Desktop\personal\FD3\External\Plugins\SamplePlugin\obj\Debug\SamplePlugin.pdb
