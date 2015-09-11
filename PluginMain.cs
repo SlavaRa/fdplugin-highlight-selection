@@ -12,8 +12,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using PluginCore.Controls;
 
 namespace HighlightSelection
 {
@@ -28,10 +30,9 @@ namespace HighlightSelection
         int prevPos;
         ASResult prevResult;
         string prevToken;
-	    readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
-        Panel annotationsBar;
+        readonly Dictionary<ScintillaControl, Dictionary<int, Control>> sciToLineToAnnotationMarker = new Dictionary<ScintillaControl, Dictionary<int, Control>>();
 
-		#region Required Properties
+        #region Required Properties
 
         /// <summary>
         /// Api level of the plugin
@@ -95,33 +96,30 @@ namespace HighlightSelection
 		public void HandleEvent(object sender, NotifyEvent e, HandlingPriority priority)
 		{
             ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
-			switch (e.Type)
+		    ScintillaControl sci = doc.SciControl;
+		    switch (e.Type)
 			{
 				case EventType.FileSwitch:
                     RemoveHighlights(doc.SciControl);
-                    if (doc.IsEditable)
+			        if (doc.IsEditable)
                     {
-                        ScintillaControl sci = doc.SciControl;
-                        annotationsBar?.Parent?.Controls.Remove(annotationsBar);
-                        annotationsBar = new Panel {Visible = false};
-                        doc.SplitContainer.Parent.Controls.Add(annotationsBar);
-                        doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
                         sci.DoubleClick += OnSciDoubleClick;
                         sci.Modified += OnSciModified;
                         sci.Resize += OnSciResize;
-                        UpdateAnnotationsBar();
+                        if (!sciToLineToAnnotationMarker.ContainsKey(sci)) sciToLineToAnnotationMarker[sci] = new Dictionary<int, Control>();
+                        UpdateAnnotationsBar(sci);
                         tempo.Interval = PluginBase.Settings.DisplayDelay;
                         tempo.Start();
                     }
                     else tempo.Stop();
 				    break;
 				case EventType.FileSave:
-                    RemoveHighlights(doc.SciControl);
+                    RemoveHighlights(sci);
                     break;
                 case EventType.SettingChanged:
                     flagToColor = new FlagToColor(settings);
-                    UpdateAnnotationsBar();
+                    UpdateAnnotationsBar(sci);
                     UpdateHighlightUnderCursorTimer();
 				    break;
 			}
@@ -181,21 +179,26 @@ namespace HighlightSelection
         void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
-            int scaleX = 1;
-            if (annotationsBar != null)
-            {
-                annotationsBar.Controls.Clear();
-                locationYToAnnotationMarker.Clear();
-                scaleX = annotationsBar.Height / sci.LineCount;
-            }
             Color color = settings.HighlightUnderCursorEnabled && prevResult != null ? GetHighlightColor() : settings.HighlightColor;
             int style = (int)settings.HighlightStyle;
             int mask = 1 << sci.StyleBits;
             int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
             int argb = color.ToArgb();
+            var vScrollBarWidth = GetVScrollBarWidth(sci);
+            Control.ControlCollection controls = PluginBase.MainForm.CurrentDocument.SplitContainer.Parent.Controls;
+            bool enableAnnotationBar = settings.EnableAnnotationBar;
+            int scale = GetVScrollBarHeight(sci) / sci.LineCount;
+            Dictionary<int, Control> lineToAnnotationMarker = sciToLineToAnnotationMarker[sci];
+            if (enableAnnotationBar)
+            {
+                foreach (Button control in controls.OfType<Button>())
+                    controls.Remove(control);
+                lineToAnnotationMarker.Clear();
+            }
             foreach (SearchMatch match in matches)
             {
+                #region markers
                 int start = sci.MBSafePosition(match.Index);
                 int end = start + sci.MBSafeTextLength(match.Value);
                 sci.SetIndicStyle(0, style);
@@ -209,16 +212,14 @@ namespace HighlightSelection
                     sci.MarkerAdd(line, MARKER_NUMBER);
                     sci.MarkerSetBack(MARKER_NUMBER, argb);
                 }
-                if (annotationsBar == null) continue;
-                int y = annotationsBar.Height * line / sci.LineCount;
-                if (locationYToAnnotationMarker.ContainsKey(y)) continue;
+                #endregion
+                if (!enableAnnotationBar || lineToAnnotationMarker.ContainsKey(line)) continue;
                 Button item = new Button()
                 {
                     FlatStyle = FlatStyle.Flat,
-                    Size = new Size(annotationsBar.Width, Math.Max(2, scaleX)),
+                    Size = new Size(vScrollBarWidth, Math.Max(2, scale)),
                     BackColor = color,
                     ForeColor = color,
-                    Location = new Point(0, y),
                     Cursor = Cursors.Hand
                 };
                 item.FlatAppearance.BorderSize = 0;
@@ -231,10 +232,12 @@ namespace HighlightSelection
                     sci.GotoLine(line);
                     sci.SetSel(start, end);
                 };
-                locationYToAnnotationMarker[y] = item;
-                annotationsBar.Controls.Add(item);
+                lineToAnnotationMarker[line] = item;
+                controls.Add(item);
+                controls.SetChildIndex(item, 0);
             }
             prevPos = sci.CurrentPos;
+            UpdateAnnotationsBar(sci);
         }
 
         Color GetHighlightColor()
@@ -263,9 +266,10 @@ namespace HighlightSelection
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
-            if (annotationsBar == null) return;
-            annotationsBar.Controls.Clear();
-            locationYToAnnotationMarker.Clear();
+            if (sci != null && sciToLineToAnnotationMarker.ContainsKey(sci)) sciToLineToAnnotationMarker[sci].Clear();
+            Control.ControlCollection controls = PluginBase.MainForm.CurrentDocument.SplitContainer.Parent.Controls;
+            foreach (Button control in controls.OfType<Button>())
+                controls.Remove(control);
         }
 
         List<SearchMatch> GetResults(ScintillaControl sci, string text)
@@ -338,14 +342,41 @@ namespace HighlightSelection
             return newMatches;
         }
 
-        void UpdateAnnotationsBar()
+	    void UpdateAnnotationsBar(ScintillaControl sci)
         {
-            ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
-            annotationsBar.Size = new Size(6, sci.Height - 17);
-            annotationsBar.Location = new Point(sci.Width - 21, annotationsBar.Location.Y);
-            annotationsBar.BackColor = Color.Transparent;
-            annotationsBar.Visible = settings.EnableAnnotationBar
-                                && annotationsBar.Height < sci.LineCount * sci.TextHeight(sci.LineFromPosition(sci.CurrentPos));
+	        Dictionary<int, Control> lineToAnnotationMarker = sciToLineToAnnotationMarker[sci];
+	        if (lineToAnnotationMarker.Count == 0) return;
+	        bool enableAnnotationBar = settings.EnableAnnotationBar;
+	        int lineCount = sci.LineCount;
+	        decimal scale = (decimal)GetVScrollBarHeight(sci) / lineCount;
+            int itemX = sci.Width - GetVScrollBarWidth(sci);
+            for (int i = 0; i < lineCount; i++)
+            {
+                if (!lineToAnnotationMarker.ContainsKey(i)) continue;
+                Control item = lineToAnnotationMarker[i];
+                item.Visible = enableAnnotationBar;
+                item.Location = new Point(itemX, (int)(i * scale));
+            }
+        }
+
+	    static int GetVScrollBarWidth(ScintillaControl sci)
+	    {
+            foreach (Control control in sci.Controls)
+            {
+                if (control is ScrollBarEx && control.Width < control.Height)
+                    return control.Width;
+            }
+            return 17;
+	    }
+
+        static int GetVScrollBarHeight(ScintillaControl sci)
+        {
+            foreach (Control control in sci.Controls)
+            {
+                if (control is ScrollBarEx && control.Width < control.Height)
+                    return control.Height - control.Width;
+            }
+            return sci.Height - GetVScrollBarWidth(sci);
         }
 
         #endregion
@@ -365,14 +396,14 @@ namespace HighlightSelection
             underCursorTempo.Stop();
             tempo.Stop();
             RemoveHighlights(sender);
-            UpdateAnnotationsBar();
+            UpdateAnnotationsBar(sender);
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Start();
         }
 
         void OnSciResize(object sender, EventArgs e)
         {
-            UpdateAnnotationsBar();
+            UpdateAnnotationsBar((ScintillaControl)sender);
         }
 
         void OnTempoTick(object sender, EventArgs e)
