@@ -1,9 +1,0 @@
-D:\projects\fd-highlight-selected-plugin\Bin\Release\HighlightSelection.dll
-D:\projects\fd-highlight-selected-plugin\Bin\Release\HighlightSelection.pdb
-D:\projects\fd-highlight-selected-plugin\Bin\Release\ASCompletion.dll
-D:\projects\fd-highlight-selected-plugin\Bin\Release\ASCompletion.pdb
-D:\projects\fd-highlight-selected-plugin\obj\Release\HighlightSelection.csprojResolveAssemblyReference.cache
-D:\projects\fd-highlight-selected-plugin\obj\Release\HighlightSelection.dll
-D:\projects\fd-highlight-selected-plugin\obj\Release\HighlightSelection.pdb
-D:\projects\fd-highlight-selected-plugin\Bin\Release\PluginCore.dll
-D:\projects\fd-highlight-selected-plugin\Bin\Release\PluginCore.pdb

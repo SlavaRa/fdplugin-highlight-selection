@@ -19,11 +19,6 @@ namespace HighlightSelection
 {
 	public class PluginMain : IPlugin
 	{
-	    private const string pluginName = "Highlight Selection";
-	    private const string pluginGuid = "1f387fab-421b-42ac-a985-72a03534f731";
-	    private const string pluginHelp = "";
-	    private const string pluginDesc = "A plugin to highlight your selected text";
-	    private const string pluginAuth = "mike.cann@gmail.com, SlavaRa";
 	    private const int MARKER_NUMBER = 0;
 	    private string settingFilename;
 		private Settings settings;
@@ -41,40 +36,40 @@ namespace HighlightSelection
         /// <summary>
         /// Api level of the plugin
         /// </summary>
-        public int Api { get { return 1; }}
+        public int Api => 1;
 
-		/// <summary>
+	    /// <summary>
 		/// Name of the plugin
 		/// </summary> 
-		public string Name { get { return pluginName; }}
+		public string Name => "Highlight Selection";
 
-		/// <summary>
+	    /// <summary>
 		/// GUID of the plugin
 		/// </summary>
-		public string Guid { get { return pluginGuid; }}
+		public string Guid => "1f387fab-421b-42ac-a985-72a03534f731";
 
-		/// <summary>
+	    /// <summary>
 		/// Author of the plugin
 		/// </summary> 
-		public string Author { get { return pluginAuth; }}
+		public string Author => "mike.cann@gmail.com, SlavaRa";
 
-		/// <summary>
+	    /// <summary>
 		/// Description of the plugin
 		/// </summary> 
-		public string Description { get { return pluginDesc; }}
+		public string Description => "A plugin to highlight your selected text";
 
-		/// <summary>
+	    /// <summary>
 		/// Web address for help
 		/// </summary> 
-		public string Help { get { return pluginHelp; }}
+		public string Help => "";
 
-		/// <summary>
+	    /// <summary>
 		/// Object that contains the settings
 		/// </summary>
 		[Browsable(false)]
-		public Object Settings { get { return settings; }}
+		public object Settings => settings;
 
-		#endregion
+	    #endregion
 
 		#region Required Methods
 
@@ -107,7 +102,7 @@ namespace HighlightSelection
                     if (doc.IsEditable)
                     {
                         ScintillaControl sci = doc.SciControl;
-                        if (annotationsBar != null && annotationsBar.Parent != null) annotationsBar.Parent.Controls.Remove(annotationsBar);
+                        annotationsBar?.Parent?.Controls.Remove(annotationsBar);
                         annotationsBar = new Panel {Visible = false};
                         doc.SplitContainer.Parent.Controls.Add(annotationsBar);
                         doc.SplitContainer.Parent.Controls.SetChildIndex(annotationsBar, 0);
@@ -138,7 +133,7 @@ namespace HighlightSelection
 
         private void InitBasics()
 		{
-            string path = Path.Combine(PathHelper.DataDir, pluginName);
+            string path = Path.Combine(PathHelper.DataDir, "Highlight Selection");
 			if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 			settingFilename = Path.Combine(path, "Settings.fdb");
 		}
@@ -300,7 +295,7 @@ namespace HighlightSelection
                 if (result == null || result.IsNull()) RemoveHighlights(sci);
                 else 
                 {
-                    if (prevResult != null && (result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)) return;
+                    if (prevResult != null && (!Equals(result.Member, prevResult.Member) || !Equals(result.Type, prevResult.Type) || result.Path != prevResult.Path)) return;
                     RemoveHighlights(sci);
                     prevToken = newToken;
                     prevResult = result;
@@ -319,15 +314,12 @@ namespace HighlightSelection
             int lineFrom = 0;
             int lineTo = sci.LineCount;
             bool isLocalVar = false;
-            if (exprType.Member != null)
+            if ((exprType.Member?.Flags & localVarMask) > 0)
             {
-                if ((exprType.Member.Flags & localVarMask) > 0)
-                {
-                    var contextMember = exprType.Context.ContextFunction;
-                    lineFrom = contextMember.LineFrom;
-                    lineTo = contextMember.LineTo;
-                    isLocalVar = true;
-                }
+                var contextMember = exprType.Context.ContextFunction;
+                lineFrom = contextMember.LineFrom;
+                lineTo = contextMember.LineTo;
+                isLocalVar = true;
             }
             List<SearchMatch> newMatches = new List<SearchMatch>();
             foreach (SearchMatch m in matches)
@@ -335,7 +327,7 @@ namespace HighlightSelection
                 if (m.Line < lineFrom || m.Line > lineTo) continue;
                 int pos = sci.MBSafePosition(m.Index);
                 exprType = ASComplete.GetExpressionType(sci, sci.WordEndPosition(pos, true));
-                if (exprType == null || (exprType.InClass != null && exprType.InClass != prevResult.InClass)) continue;
+                if (exprType == null || (exprType.InClass != null && !Equals(exprType.InClass, prevResult.InClass))) continue;
                 MemberModel member = exprType.Member;
                 if (!isLocalVar)
                 {
@@ -386,8 +378,7 @@ namespace HighlightSelection
         private void OnTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
-            if (document == null) return;
-            ScintillaControl sci = document.SciControl;
+            ScintillaControl sci = document?.SciControl;
             if (sci == null) return;
             int currentPos = sci.CurrentPos;
             if (currentPos == prevPos) return;
@@ -398,7 +389,7 @@ namespace HighlightSelection
                 if (prevResult != null)
                 {
                     ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
-                    if (result == null || result.IsNull() || result.Member != prevResult.Member || result.Type != prevResult.Type || result.Path != prevResult.Path)
+                    if (result == null || result.IsNull() || !Equals(result.Member, prevResult.Member) || !Equals(result.Type, prevResult.Type) || result.Path != prevResult.Path)
                     {
                         RemoveHighlights(sci);
                         underCursorTempo.Start();
@@ -437,23 +428,25 @@ namespace HighlightSelection
 
         private void Initialize()
         {
-            flagsToColor = new Dictionary<FlagType, Color>();
-            flagsToColor[FlagType.Abstract] = settings.AbstractColor;
-            flagsToColor[FlagType.TypeDef] = settings.TypeDefColor;
-            flagsToColor[FlagType.Enum] = settings.EnumColor;
-            flagsToColor[FlagType.Class] = settings.ClassColor;
-            flagsToColor[FlagType.ParameterVar] = settings.MemberFunctionColor;
-            flagsToColor[FlagType.LocalVar] = settings.LocalVariableColor;
-            flagsToColor[FlagType.Constant] = settings.ConstantColor;
-            flagsToColor[FlagType.Variable] = settings.VariableColor;
-            flagsToColor[FlagType.Setter] = settings.AccessorColor;
-            flagsToColor[FlagType.Getter] = settings.AccessorColor;
-            flagsToColor[FlagType.Function] = settings.MethodColor;
-            flagsToColor[FlagType.Static & FlagType.Constant] = settings.StaticConstantColor;
-            flagsToColor[FlagType.Static & FlagType.Variable] = settings.StaticVariableColor;
-            flagsToColor[FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor;
-            flagsToColor[FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor;
-            flagsToColor[FlagType.Static & FlagType.Function] = settings.StaticMethodColor;
+            flagsToColor = new Dictionary<FlagType, Color>
+            {
+                [FlagType.Abstract] = settings.AbstractColor,
+                [FlagType.TypeDef] = settings.TypeDefColor,
+                [FlagType.Enum] = settings.EnumColor,
+                [FlagType.Class] = settings.ClassColor,
+                [FlagType.ParameterVar] = settings.MemberFunctionColor,
+                [FlagType.LocalVar] = settings.LocalVariableColor,
+                [FlagType.Constant] = settings.ConstantColor,
+                [FlagType.Variable] = settings.VariableColor,
+                [FlagType.Setter] = settings.AccessorColor,
+                [FlagType.Getter] = settings.AccessorColor,
+                [FlagType.Function] = settings.MethodColor,
+                [FlagType.Static & FlagType.Constant] = settings.StaticConstantColor,
+                [FlagType.Static & FlagType.Variable] = settings.StaticVariableColor,
+                [FlagType.Static & FlagType.Setter] = settings.StaticAccessorColor,
+                [FlagType.Static & FlagType.Getter] = settings.StaticAccessorColor,
+                [FlagType.Static & FlagType.Function] = settings.StaticMethodColor
+            };
         }
 
         public Color GetColor(FlagType flags)
