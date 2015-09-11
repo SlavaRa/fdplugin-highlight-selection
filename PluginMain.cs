@@ -19,17 +19,17 @@ namespace HighlightSelection
 {
 	public class PluginMain : IPlugin
 	{
-	    private const int MARKER_NUMBER = 0;
-	    private string settingFilename;
-		private Settings settings;
-        private FlagToColor flagToColor;
-        private Timer underCursorTempo = new Timer();
-        private Timer tempo = new Timer();
-        private int prevPos;
-        private ASResult prevResult;
-        private string prevToken;
-	    private readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
-        private Panel annotationsBar;
+	    const int MARKER_NUMBER = 0;
+	    string settingFilename;
+		Settings settings;
+        FlagToColor flagToColor;
+        Timer underCursorTempo = new Timer();
+        Timer tempo = new Timer();
+        int prevPos;
+        ASResult prevResult;
+        string prevToken;
+	    readonly Dictionary<int, Button> locationYToAnnotationMarker = new Dictionary<int, Button>();
+        Panel annotationsBar;
 
 		#region Required Properties
 
@@ -92,7 +92,7 @@ namespace HighlightSelection
 		    SaveSettings();
 		}
 
-		public void HandleEvent(object sender, NotifyEvent e, HandlingPriority prority)
+		public void HandleEvent(object sender, NotifyEvent e, HandlingPriority priority)
 		{
             ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
 			switch (e.Type)
@@ -131,38 +131,38 @@ namespace HighlightSelection
 
 		#region Custom Methods
 
-        private void InitBasics()
+        void InitBasics()
 		{
             string path = Path.Combine(PathHelper.DataDir, "Highlight Selection");
 			if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 			settingFilename = Path.Combine(path, "Settings.fdb");
 		}
 
-        private void LoadSettings()
+        void LoadSettings()
 		{
 			settings = new Settings();
             if (!File.Exists(settingFilename)) SaveSettings();
             else settings = (Settings)ObjectSerializer.Deserialize(settingFilename, settings);
 		}
 
-        private void InitTimers()
+        void InitTimers()
         {
             underCursorTempo.Tick += OnHighlighUnderCursorTimerTick;
             tempo.Interval = PluginBase.Settings.DisplayDelay;
             tempo.Tick += OnTempoTick;
         }
 
-        private void AddEventHandlers()
+        void AddEventHandlers()
 		{
 			EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
 		}
 
-		private void SaveSettings()
+		void SaveSettings()
 		{
 			ObjectSerializer.Serialize(settingFilename, settings);
 		}
 
-        private static bool IsValidFile(string file)
+        static bool IsValidFile(string file)
         {
             IProject project = PluginBase.CurrentProject;
             if (project == null) return false;
@@ -170,15 +170,15 @@ namespace HighlightSelection
             return (ext == ".as" || ext == ".hx" || ext == ".ls") && PluginBase.CurrentProject.DefaultSearchFilter.Contains(ext);
         }
 
-        private void UpdateHighlightUnderCursorTimer()
+        void UpdateHighlightUnderCursorTimer()
         {
-            if (settings.HighlightUnderCursorUpdateInteval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
-                settings.HighlightUnderCursorUpdateInteval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
-            underCursorTempo.Interval = settings.HighlightUnderCursorUpdateInteval;
+            if (settings.HighlightUnderCursorUpdateInterval < HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL)
+                settings.HighlightUnderCursorUpdateInterval = HighlightSelection.Settings.DEFAULT_HIGHLIGHT_UNDER_CURSOR_UPDATE_INTERVAL;
+            underCursorTempo.Interval = settings.HighlightUnderCursorUpdateInterval;
             if (!settings.HighlightUnderCursorEnabled) underCursorTempo.Stop();
         }
 
-        private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
+        void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
             if (matches == null) return;
             int scaleX = 1;
@@ -237,7 +237,7 @@ namespace HighlightSelection
             prevPos = sci.CurrentPos;
         }
 
-        private Color GetHighlightColor()
+        Color GetHighlightColor()
         {
             if (settings.HighlightUnderCursorEnabled && prevResult != null && !prevResult.IsNull())
             {
@@ -249,7 +249,7 @@ namespace HighlightSelection
             return settings.HighlightColor;
         }
 
-        private void RemoveHighlights(ScintillaControl sci)
+        void RemoveHighlights(ScintillaControl sci)
         {
             if (sci != null)
             {
@@ -268,7 +268,7 @@ namespace HighlightSelection
             locationYToAnnotationMarker.Clear();
         }
 
-        private List<SearchMatch> GetResults(ScintillaControl sci, string text)
+        List<SearchMatch> GetResults(ScintillaControl sci, string text)
         {
             if (string.IsNullOrEmpty(text) || Regex.IsMatch(text, "[^a-zA-Z0-9_$]")) return null;
             FRSearch search = new FRSearch(text)
@@ -280,7 +280,7 @@ namespace HighlightSelection
             return search.Matches(sci.Text);
         }
 
-        private void UpdateHighlightUnderCursor(ScintillaControl sci)
+        void UpdateHighlightUnderCursor(ScintillaControl sci)
         {
             string file = PluginBase.MainForm.CurrentDocument.FileName;
             if (!IsValidFile(file)) return;
@@ -307,7 +307,7 @@ namespace HighlightSelection
             }
         }
 
-        private List<SearchMatch> FilterResults(ICollection<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
+        List<SearchMatch> FilterResults(ICollection<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
         {
             if (matches == null || matches.Count == 0) return null;
             const FlagType localVarMask = FlagType.LocalVar | FlagType.ParameterVar;
@@ -338,7 +338,7 @@ namespace HighlightSelection
             return newMatches;
         }
 
-        private void UpdateAnnotationsBar()
+        void UpdateAnnotationsBar()
         {
             ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
             annotationsBar.Size = new Size(6, sci.Height - 17);
@@ -352,7 +352,7 @@ namespace HighlightSelection
 
         #region Event Handlers
 
-        private void OnSciDoubleClick(ScintillaControl sender)
+        void OnSciDoubleClick(ScintillaControl sender)
         {
             RemoveHighlights(sender);
             prevResult = null;
@@ -360,7 +360,7 @@ namespace HighlightSelection
             AddHighlights(sender, GetResults(sender, prevToken));
         }
 
-        private void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+        void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
             underCursorTempo.Stop();
             tempo.Stop();
@@ -370,12 +370,12 @@ namespace HighlightSelection
             tempo.Start();
         }
 
-        private void OnSciResize(object sender, EventArgs e)
+        void OnSciResize(object sender, EventArgs e)
         {
             UpdateAnnotationsBar();
         }
 
-        private void OnTempoTick(object sender, EventArgs e)
+        void OnTempoTick(object sender, EventArgs e)
         {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
             ScintillaControl sci = document?.SciControl;
@@ -406,7 +406,7 @@ namespace HighlightSelection
             prevPos = currentPos;
         }
 
-        private void OnHighlighUnderCursorTimerTick(object sender, EventArgs e)
+        void OnHighlighUnderCursorTimerTick(object sender, EventArgs e)
         {
             ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
             if (sci != null) UpdateHighlightUnderCursor(sci);
@@ -417,8 +417,8 @@ namespace HighlightSelection
 
     class FlagToColor
     {
-        private readonly Settings settings;
-        private Dictionary<FlagType, Color> flagsToColor;
+        readonly Settings settings;
+        Dictionary<FlagType, Color> flagsToColor;
 
         public FlagToColor(Settings settings)
         {
@@ -426,7 +426,7 @@ namespace HighlightSelection
             Initialize();
         }
 
-        private void Initialize()
+        void Initialize()
         {
             flagsToColor = new Dictionary<FlagType, Color>
             {
