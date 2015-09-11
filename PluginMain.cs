@@ -178,7 +178,7 @@ namespace HighlightSelection
             int mask = 1 << sci.StyleBits;
             int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
-            int argb = color.ToArgb();
+            int argb = DataConverter.ColorToInt32(color);
             var vScrollBarWidth = GetVScrollBarWidth(sci);
             Control.ControlCollection controls = PluginBase.MainForm.CurrentDocument.SplitContainer.Parent.Controls;
             bool enableAnnotationBar = settings.EnableAnnotationBar;
