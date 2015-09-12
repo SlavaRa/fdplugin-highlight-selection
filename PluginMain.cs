@@ -12,10 +12,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using ASCompletion.Context;
 using PluginCore.Controls;
+using Keys = System.Windows.Forms.Keys;
 
 namespace HighlightSelection
 {
@@ -104,7 +105,7 @@ namespace HighlightSelection
 			        if (doc.IsEditable)
                     {
                         sci.MarkerDefine(MARKER_NUMBER, MarkerSymbol.Fullrect);
-                        sci.DoubleClick += OnSciDoubleClick;
+                        sci.DoubleClick += HighlightUnderCursor;
                         sci.Modified += OnSciModified;
                         sci.Resize += OnSciResize;
                         if (!sciToLineToAnnotationMarker.ContainsKey(sci)) sciToLineToAnnotationMarker[sci] = new Dictionary<int, Control>();
@@ -118,10 +119,18 @@ namespace HighlightSelection
                     RemoveHighlights(sci);
                     break;
                 case EventType.SettingChanged:
-                    flagToColor = new FlagToColor(settings);
-                    UpdateAnnotationsBar(sci);
+			        flagToColor = new FlagToColor(settings);
+			        PluginBase.MainForm.IgnoredKeys.Add((Keys)settings.HighlightUsagesInFileShortcut);
+			        UpdateAnnotationsBar(sci);
                     UpdateHighlightUnderCursorTimer();
 				    break;
+                case EventType.Keys:
+			        if (((KeyEvent) e).Value == (Keys) settings.HighlightUsagesInFileShortcut)
+			        {
+                        sci.SelectWord();
+			            HighlightUnderCursor(sci);
+			        }
+			        break;
 			}
 		}
 
@@ -150,17 +159,13 @@ namespace HighlightSelection
             tempo.Tick += OnTempoTick;
         }
 
-        void AddEventHandlers() => EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged);
+        void AddEventHandlers()
+        {
+            PluginBase.MainForm.IgnoredKeys.Add((Keys) settings.HighlightUsagesInFileShortcut);
+            EventManager.AddEventHandler(this, EventType.FileSwitch | EventType.FileSave | EventType.SettingChanged | EventType.Keys);
+        }
 
 	    void SaveSettings() => ObjectSerializer.Serialize(settingFilename, settings);
-
-	    static bool IsValidFile(string file)
-        {
-            IProject project = PluginBase.CurrentProject;
-            if (project == null) return false;
-            string ext = Path.GetExtension(file);
-            return (ext == ".as" || ext == ".hx" || ext == ".ls") && PluginBase.CurrentProject.DefaultSearchFilter.Contains(ext);
-        }
 
         void UpdateHighlightUnderCursorTimer()
         {
@@ -179,20 +184,14 @@ namespace HighlightSelection
             int es = sci.EndStyled;
             bool addLineMarker = settings.AddLineMarker;
             int argb = DataConverter.ColorToInt32(color);
-            var vScrollBarWidth = GetVScrollBarWidth(sci);
             Control.ControlCollection controls = PluginBase.MainForm.CurrentDocument.SplitContainer.Parent.Controls;
             bool enableAnnotationBar = settings.EnableAnnotationBar;
-            int scale = GetVScrollBarHeight(sci) / sci.LineCount;
             Dictionary<int, Control> lineToAnnotationMarker = sciToLineToAnnotationMarker[sci];
-            if (enableAnnotationBar)
-            {
-                foreach (Button control in controls.OfType<Button>())
-                    controls.Remove(control);
-                lineToAnnotationMarker.Clear();
-            }
+            foreach (Control control in lineToAnnotationMarker.Values) control.Parent.Controls.Remove(control);
+            lineToAnnotationMarker.Clear();
             foreach (SearchMatch match in matches)
             {
-                #region markers
+                #region line markers
                 int start = sci.MBSafePosition(match.Index);
                 int end = start + sci.MBSafeTextLength(match.Value);
                 sci.SetIndicStyle(0, style);
@@ -207,11 +206,11 @@ namespace HighlightSelection
                     sci.MarkerSetBack(MARKER_NUMBER, argb);
                 }
                 #endregion
+                #region annotation markers
                 if (!enableAnnotationBar || lineToAnnotationMarker.ContainsKey(line)) continue;
                 Button item = new Button()
                 {
                     FlatStyle = FlatStyle.Flat,
-                    Size = new Size(vScrollBarWidth, Math.Max(2, scale)),
                     BackColor = color,
                     ForeColor = color,
                     Cursor = Cursors.Hand
@@ -229,6 +228,7 @@ namespace HighlightSelection
                 lineToAnnotationMarker[line] = item;
                 controls.Add(item);
                 controls.SetChildIndex(item, 0);
+                #endregion
             }
             prevPos = sci.CurrentPos;
             UpdateAnnotationsBar(sci);
@@ -260,10 +260,12 @@ namespace HighlightSelection
             prevPos = -1;
             prevToken = string.Empty;
             prevResult = null;
-            if (sci != null && sciToLineToAnnotationMarker.ContainsKey(sci)) sciToLineToAnnotationMarker[sci].Clear();
-            Control.ControlCollection controls = PluginBase.MainForm.CurrentDocument.SplitContainer.Parent.Controls;
-            foreach (Button control in controls.OfType<Button>())
-                controls.Remove(control);
+            if (sci != null && sciToLineToAnnotationMarker.ContainsKey(sci))
+            {
+                Dictionary<int, Control> lineToAnnotationMarker = sciToLineToAnnotationMarker[sci];
+                foreach (Control control in lineToAnnotationMarker.Values) control.Parent.Controls.Remove(control);
+                lineToAnnotationMarker.Clear();
+            }
         }
 
         List<SearchMatch> GetResults(ScintillaControl sci, string text)
@@ -278,31 +280,32 @@ namespace HighlightSelection
             return search.Matches(sci.Text);
         }
 
-        void UpdateHighlightUnderCursor(ScintillaControl sci)
+        bool UpdateHighlightUnderCursor(ScintillaControl sci)
         {
-            string file = PluginBase.MainForm.CurrentDocument.FileName;
-            if (!IsValidFile(file)) return;
+            if (PluginBase.MainForm.CurrentDocument == null || !ASContext.Context.IsFileValid) return false;
             int currentPos = sci.CurrentPos;
             string newToken = sci.GetWordFromPosition(currentPos);
             if (!string.IsNullOrEmpty(newToken)) newToken = newToken.Trim();
             if (string.IsNullOrEmpty(newToken)) RemoveHighlights(sci);
             else 
             {
-                if (prevResult == null && prevToken == newToken) return;
-                ASResult result = IsValidFile(file) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
+                if (prevResult == null && prevToken == newToken) return false;
+                ASResult result = ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true));
                 if (result == null || result.IsNull()) RemoveHighlights(sci);
                 else 
                 {
-                    if (prevResult != null && (!Equals(result.Member, prevResult.Member) || !Equals(result.Type, prevResult.Type) || result.Path != prevResult.Path)) return;
+                    if (prevResult != null && (!Equals(result.Member, prevResult.Member) || !Equals(result.Type, prevResult.Type) || result.Path != prevResult.Path)) return false;
                     RemoveHighlights(sci);
                     prevToken = newToken;
                     prevResult = result;
                     List<SearchMatch> matches = FilterResults(GetResults(sci, prevToken), result, sci);
-                    if (matches == null || matches.Count == 0) return;
+                    if (matches == null || matches.Count == 0) return false;
                     underCursorTempo.Stop();
                     AddHighlights(sci, matches);
+                    return true;
                 }
             }
+            return false;
         }
 
         List<SearchMatch> FilterResults(ICollection<SearchMatch> matches, ASResult exprType, ScintillaControl sci)
@@ -343,12 +346,14 @@ namespace HighlightSelection
 	        bool enableAnnotationBar = settings.EnableAnnotationBar;
 	        int lineCount = sci.LineCount;
 	        decimal scale = (decimal)GetVScrollBarHeight(sci) / lineCount;
+	        int vScrollBarWidth = GetVScrollBarWidth(sci);
             int itemX = sci.Width - GetVScrollBarWidth(sci);
             for (int i = 0; i < lineCount; i++)
             {
                 if (!lineToAnnotationMarker.ContainsKey(i)) continue;
                 Control item = lineToAnnotationMarker[i];
                 item.Visible = enableAnnotationBar;
+                item.Size = new Size(vScrollBarWidth, Math.Max(2, (int)scale));
                 item.Location = new Point(itemX, (int)(i * scale));
             }
         }
@@ -360,7 +365,7 @@ namespace HighlightSelection
                 if (control is ScrollBarEx && control.Width < control.Height)
                     return control.Width;
             }
-            return 0;
+            return 17;
 	    }
 
         static int GetVScrollBarHeight(ScintillaControl sci)
@@ -373,19 +378,22 @@ namespace HighlightSelection
             return sci.Height - GetVScrollBarWidth(sci);
         }
 
-        #endregion
+	    void HighlightUnderCursor(ScintillaControl sender)
+	    {
+	        if (!UpdateHighlightUnderCursor(sender))
+	        {
+	            RemoveHighlights(sender);
+	            prevResult = null;
+	            prevToken = sender.SelText.Trim();
+	            AddHighlights(sender, GetResults(sender, prevToken));
+	        }
+	    }
 
-        #region Event Handlers
+	    #endregion
 
-        void OnSciDoubleClick(ScintillaControl sender)
-        {
-            RemoveHighlights(sender);
-            prevResult = null;
-            prevToken = sender.SelText.Trim();
-            AddHighlights(sender, GetResults(sender, prevToken));
-        }
+	    #region Event Handlers
 
-        void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
+	    void OnSciModified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int intfoldLevelNow, int foldLevelPrev)
         {
             underCursorTempo.Stop();
             tempo.Stop();
@@ -399,8 +407,7 @@ namespace HighlightSelection
 
 	    void OnTempoTick(object sender, EventArgs e)
         {
-            ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
-            ScintillaControl sci = document?.SciControl;
+	        ScintillaControl sci = PluginBase.MainForm.CurrentDocument?.SciControl;
             if (sci == null) return;
             int currentPos = sci.CurrentPos;
             if (currentPos == prevPos) return;
@@ -410,7 +417,7 @@ namespace HighlightSelection
                 if (prevPos != currentPos) underCursorTempo.Stop();
                 if (prevResult != null)
                 {
-                    ASResult result = IsValidFile(document.FileName) ? ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true)) : null;
+                    ASResult result = ASComplete.GetExpressionType(sci, sci.WordEndPosition(currentPos, true));
                     if (result == null || result.IsNull() || !Equals(result.Member, prevResult.Member) || !Equals(result.Type, prevResult.Type) || result.Path != prevResult.Path)
                     {
                         RemoveHighlights(sci);

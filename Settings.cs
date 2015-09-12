@@ -2,6 +2,8 @@ using ScintillaNet.Enums;
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Windows.Forms;
+using Keys = ScintillaNet.Enums.Keys;
 
 namespace HighlightSelection
 {
@@ -85,7 +87,18 @@ namespace HighlightSelection
 	        set { enableAnnotationBar = value; }
 	    }
 
-	    bool highlightUnderCursorEnabled = DEFAULT_HIGHLIGHT_UNDER_CURSOR;
+        private Shortcut highlightUsagesInFileShortcut = Shortcut.CtrlShiftF7;
+
+        [Category("General")]
+        [DisplayName("Highlight Usages in File")]
+        [DefaultValue(Shortcut.CtrlShiftF7)]
+        public Shortcut HighlightUsagesInFileShortcut
+        {
+            get { return highlightUsagesInFileShortcut; }
+            set { highlightUsagesInFileShortcut = value; }
+        }
+
+        bool highlightUnderCursorEnabled = DEFAULT_HIGHLIGHT_UNDER_CURSOR;
 
 	    [Category("Highlight references to symbol under cursor")]
 	    [DisplayName("Enabled")]
